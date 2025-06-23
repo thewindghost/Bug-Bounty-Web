@@ -7,6 +7,8 @@ services:
     restart: always
     expose:
       - 5505
+    volumes:
+      - .:/bug_bounty_web
     depends_on:
       - nginx
 

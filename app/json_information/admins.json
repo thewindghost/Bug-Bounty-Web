@@ -1,0 +1,5 @@
+{
+    "admin1": ["John Handler", "age 30", "number-phone: 099999213616", "id:10", "role='CTB{real_admin_flag}'"],
+    "admin2": ["John Handler", "age 30", "number-phone: 099999213616", "id:30", "role='CTB{real_admin_flag}'"],
+    "root": ["DevOps", "age 25", "number-phone: 093324664", "id:1812", "role=root", "path=/api/update-path", "username=root", "password=root100020149292"]
+}

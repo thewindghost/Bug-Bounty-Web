@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <title>403 Forbidden</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #e0e0e0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: rgba(20, 20, 30, 0.9);
+      padding: 40px 50px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #00ffa3;
+      width: 480px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #00ffa3;
+      margin-bottom: 20px;
+      font-size: 2rem;
+      letter-spacing: 1px;
+    }
+
+    p {
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+      color: #a0ffa3;
+    }
+
+    button {
+      background-color: #00ffa3;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f2027;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #00cc7a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>403 - Forbidden</h1>
+    <p>You don't have permission to access this page.</p>
+    <button onclick="goBack()">Go Back</button>
+  </div>
+
+  <script>
+    function goBack() {
+      if (document.referrer) {
+        window.location.href = document.referrer;
+      } else {
+        window.history.back();
+      }
+    }
+  </script>
+</body>
+</html>

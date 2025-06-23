@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <title>Wallet</title>
+    <style>
+        body {
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          color: #e0e0e0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          margin: 0;
+        }
+      
+        .container {
+          background-color: rgba(20, 20, 30, 0.9);
+          padding: 40px 50px;
+          border-radius: 15px;
+          box-shadow: 0 0 20px #00ffa3;
+          width: 380px;
+          box-sizing: border-box;
+          text-align: center;
+        }
+      
+        h2 {
+          color: #00ffa3;
+          font-weight: 700;
+          font-size: 2rem;
+          margin-bottom: 30px;
+        }
+      
+        label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 600;
+          color: #a0ffa3;
+          text-align: left;
+        }
+      
+        input.balance-input {
+          width: 100%;
+          padding: 10px 12px;
+          border-radius: 8px;
+          border: none;
+          background-color: #121212;
+          color: #e0e0e0;
+          font-size: 1rem;
+          box-shadow: inset 0 0 5px #00ffa3;
+          outline: none;
+          margin-bottom: 25px;
+          transition: box-shadow 0.3s ease;
+        }
+      
+        input.balance-input:focus {
+          box-shadow: 0 0 12px #00ffa3;
+        }
+      
+        button.submit-button {
+          width: 100%;
+          padding: 14px 20px;
+          background-color: #00ffa3;
+          border: none;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 1.1rem;
+          color: #0f2027;
+          cursor: pointer;
+          box-shadow: 0 0 15px #00ffa3;
+          transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+      
+        button.submit-button:hover {
+          background-color: #00cc7a;
+          box-shadow: 0 0 25px #00cc7a;
+        }
+      
+        .result-message, .error-message {
+          margin-top: 25px;
+          padding: 12px 20px;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 1rem;
+        }
+      
+        .result-message {
+          background-color: rgba(0, 255, 163, 0.15);
+          color: #00ffa3;
+          box-shadow: 0 0 10px #00ffa3;
+        }
+      
+        .error-message {
+          background-color: rgba(255, 50, 50, 0.15);
+          color: #ff3232;
+          box-shadow: 0 0 10px #ff3232;
+        }
+      </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Update Your Balance</h2>
+
+        <form action="/user/balances" method="POST">
+            <label for="balance">Enter New Balance</label>
+            <input type="text" id="balance" name="balance" class="balance-input" required>
+
+            <button type="submit" class="submit-button">Update Balance</button>
+        </form>
+
+        {% if result %}
+        <div class="result-message">
+            <p>You have: {{ result }} in your wallet</p>
+        </div>
+        {% elif error %}
+        <div class="error-message">
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>

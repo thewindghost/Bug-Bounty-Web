@@ -1,0 +1,8 @@
+Flask
+blueprint
+Flask-Mail
+Flask-Caching
+itsdangerous
+python-dotenv
+bleach
+lxml

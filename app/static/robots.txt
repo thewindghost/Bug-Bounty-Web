@@ -1,0 +1,14 @@
+User-agent: *
+Disallow: /admin-panel-131315315211
+Disallow: /admin-panel-131315315211/logs
+
+User-agent: *
+allow: /
+allow: /register
+allow: /login
+allow: /dashboard
+allow: /profile
+allow: /parser-info
+allow: /balances
+allow: /reset-password
+allow: /logout

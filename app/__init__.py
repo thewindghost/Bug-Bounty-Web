@@ -8,7 +8,7 @@ mail = Mail()
 cache = Cache()
 
 def create_app():
-    app = Flask(__name__, instance_relative_config=False, static_url_path="/", static_folder="static")
+    app = Flask(__name__, instance_relative_config=False, static_url_path="/static", static_folder="static")
 
     app.config.from_object(Config)
 

@@ -218,13 +218,69 @@ DB_CONNECTION_FILE_RELATIVE_PATH=./app/backend_utils/database.db
 DATA_FILE_PATH_USERS=./app/info_json_information/admins.json
 DATA_FILE_PATH_ADMINS=./app/info_json_information/users.json
 ```
-
 ---
+
+### Running with docker-compose ?
+```bash
+docker-compose up -d && docker-compose build
+```
+#### Note: if you have updated the code from local and want docker container to have that code. Run the docker-compose build command above again
+---
+
+### docker-compose.yml
+```yaml
+version: '3.8'
+
+services:
+  bug_bounty_web:
+    build: .
+    container_name: bug_bounty_web_app
+    restart: always
+    expose:
+      - 5505
+    volumes:
+      - .:/bug_bounty_web:ro
+    depends_on:
+      - nginx
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./app/http/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+```
+---
+
+### Dockerfile
+```config
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    libffi-dev \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /bug_bounty_web
+
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# WSGI entrypoint
+CMD ["gunicorn", "-w 1", "--bind", "0.0.0.0:5505", "wsgi:app"]
+```
+---
+
 ### ./requirements.txt
 ```bash
 pip install -r requirements
 ```
-```
+```text
 Flask
 blueprint
 Flask-Mail

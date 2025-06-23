@@ -83,67 +83,67 @@ graph TD
 ## Project Structure
 ```
 Bug-Bounty-Web/
-├─── .env
-├─── .gitignore
-├─── docker-compose.yml
-├─── Dockerfile
+├─── .env                                       # Biến môi trường (SECRET_KEY, DB path, Mail config, ...)
+├─── .gitignore                                 # không push cách file chỉ định trong đây
+├─── docker-compose.yml                         # deloy server với compose
+├─── Dockerfile                                
 ├─── LICENSE
-├─── README.md
-├─── requirements.txt
-├─── run.py
-├─── wsgi.py
+├─── README.md                                  # Tài liệu mô tả project
+├─── requirements.txt                           # Thư viện Python cần cài
+├─── run.py                                     # Điểm khởi chạy Flask App cho dev
+├─── wsgi.py                                    # Điểm khởi chạy server cho production
 │
-└───app/
-    ├─── config.py
-    ├─── __init__.py
+└───app/                                       # Thư mục chính chứa toàn bộ mã nguồn
+    ├─── config.py                              # Class cấu hình (SECRET_KEY, DB path, mail config, ...)
+    ├─── __init__.py                            # Tạo app Flask + register các blueprint
     │
-    ├───controllers/
+    ├───controllers/                            # Chức năng chính của các route
     |   |
-    |   ├─── user_xml_paser_controller.py
+    |   ├─── user_xml_paser_controller.py       # Xử lý dữ liệu XML từ client gửi lên
     │   └─── __init__.py
     │
-    ├───data/
+    ├───data/                                   # 🧾 Dữ liệu người dùng lưu ở dạng JSON
     |   |
     │   ├─── admins.json
     │   └─── users.json
     │
-    ├───database/
+    ├───database/                               # Nơi lưu trữ dữ liệu của SQLite
     |   |
-    │   ├─── connect_database.py
-    │   ├─── database.db
-    │   ├─── init_db.py
+    │   ├─── connect_database.py                # Kết nối SQLite và khởi tạo nếu chưa tồn tại
+    │   ├─── database.db                        # database.db được khởi tạo
+    │   ├─── init_db.py                         # Hàm tạo schema bảng user
     │   └─── __init__.py
     │
-    ├───http/
+    ├───http/                                   # Nơi lưu trữ nginx.conf của server
     |   |
-    │   └─── nginx.conf
+    │   └─── nginx.conf                         # File cấu hình của nginx server
     │
-    ├───logs/
+    ├───logs/                                   # 🧪 File log hệ thống / thao tác
     |   |
     │   └─── logs.txt
     │
-    ├───routes/
+    ├───routes/                                 # 🧠 Các route chính của Flask (chia theo Blueprint)
     |   |
-    │   ├─── admin.py
-    │   ├─── auth.py
-    │   ├─── error_pages.py
-    │   ├─── main.py
-    │   ├─── user.py
+    │   ├─── admin.py                           # Trang quản lý admin
+    │   ├─── auth.py                            # Xử lý login, register, reset password
+    │   ├─── error_pages.py                     # Các trang lỗi tùy chỉnh như 403, 404
+    │   ├─── main.py                            # Trang chủ, landing page
+    │   ├─── user.py                            # Dashboard, profile người dùng
     │   └─── __init__.py
     │
-    ├───services/
+    ├───services/                               # Nơi lưu trữ các dịch vụ của server
     |   |
-    │   ├─── get_token.py
-    │   ├─── send_email.py
-    │   ├─── write_log_entries.py
+    │   ├─── get_token.py                       # Tạo và verify token dùng itsdangerous
+    │   ├─── send_email.py                      # Gửi email với Flask-Mail
+    │   ├─── write_log_entries.py               # Ghi log XML data submit vào file
     │   └─── __init__.py
     │
-    ├───static/
+    ├───static/                                 # 🌐 File static (favicon, robots.txt,...)
     |   |
     │   ├─── favicon.ico
     │   └─── robots.txt
     │
-    ├───templates/
+    ├───templates/                              # 📄 Giao diện HTML chia theo module
     |   |
     │   ├─── index.html
     │   │
@@ -170,12 +170,12 @@ Bug-Bounty-Web/
     │       ├─── profile_user.html
     │       └─── wallet.html
     │
-    └───utils/
+    └───utils/                                  # 🛠 Các module tiện ích hỗ trợ backend
         |
-        ├─── check_xml_encoding.py
-        ├─── decorator_admin.py
-        ├─── decorator_user.py
-        ├─── load_data_json.py
+        ├─── check_xml_encoding.py              # Phát hiện encoding XML gửi lên
+        ├─── decorator_admin.py                 # @admin_required (check quyền admin)
+        ├─── decorator_user.py                  # @user_required (session auth)
+        ├─── load_data_json.py                  # Đọc JSON chứa user/admin info
         └─── __init__.py
 ```
 

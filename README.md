@@ -83,65 +83,100 @@ graph TD
 ## Project Structure
 ```
 Bug-Bounty-Web/
-├── .env                            # Biến môi trường (SECRET_KEY, DB path, Mail config, ...)
-├── README.md                       # Tài liệu mô tả project
-├── requirements.txt                # Thư viện Python cần cài
-├── run.py                          # Điểm khởi chạy Flask App
+├─── .env
+├─── .gitignore
+├─── docker-compose.yml
+├─── Dockerfile
+├─── LICENSE
+├─── README.md
+├─── requirements.txt
+├─── run.py
+├─── wsgi.py
 │
-└── app/                            # Thư mục chính chứa toàn bộ mã nguồn
-    ├── __init__.py                 # Tạo app Flask + register các blueprint
-    ├── config.py                   # Class cấu hình (SECRET_KEY, DB path, mail config, ...)
+└───app/
+    ├─── config.py
+    ├─── __init__.py
     │
-    ├── backend_routes/            # 🧠 Các route chính của Flask (chia theo Blueprint)
-    │   ├── __init__.py
-    │   ├── main.py                 # Trang chủ, landing page
-    │   ├── auth.py                 # Xử lý login, register, reset password
-    │   ├── user.py                 # Dashboard, profile người dùng
-    │   ├── admin.py                # Trang quản lý admin
-    │   └── error_pages.py          # Các trang lỗi tùy chỉnh như 403, 404
+    ├───controllers/
+    |   |
+    |   ├─── user_xml_paser_controller.py
+    │   └─── __init__.py
     │
-    ├── core_utils/                 # 🛠 Các module tiện ích hỗ trợ backend
-    │   ├── __init__.py
-    │   ├── connect_database.py     # Kết nối SQLite và khởi tạo nếu chưa tồn tại
-    │   ├── init_db.py              # Hàm tạo schema bảng user
-    │   ├── load_data_json.py       # Đọc JSON chứa user/admin info
-    │   ├── check_xml_encoding.py     # Phát hiện encoding XML gửi lên
-    │   ├── parser_xml.py           # Xử lý dữ liệu XML từ client gửi lên
-    │   ├── decorator_user.py       # @user_required (session auth)
-    │   ├── decorator_admin.py      # @admin_required (check quyền admin)
-    │   ├── get_token.py            # Tạo và verify token dùng itsdangerous
-    │   ├── send_email.py           # Gửi email với Flask-Mail
-    │   └── write_log_entries.py    # Ghi log XML data submit vào file
+    ├───data/
+    |   |
+    │   ├─── admins.json
+    │   └─── users.json
     │
-    ├── json_information/           # 🧾 Dữ liệu người dùng lưu ở dạng JSON
-    │   ├── users.json
-    │   └── admins.json
+    ├───database/
+    |   |
+    │   ├─── connect_database.py
+    │   ├─── database.db
+    │   ├─── init_db.py
+    │   └─── __init__.py
     │
-    ├── logs/                       # 🧪 File log hệ thống / thao tác
-    │   └── logs.txt
+    ├───http/
+    |   |
+    │   └─── nginx.conf
     │
-    ├── static/                     # 🌐 File static (favicon, robots.txt,...)
-    │   ├── favicon.ico
-    │   └── robots.txt
+    ├───logs/
+    |   |
+    │   └─── logs.txt
     │
-    └── templates/                  # 📄 Giao diện HTML chia theo module
-        ├── index.html
-        ├── admin/
-        │   └── control_panel.html
-        ├── auth/
-        │   ├── login.html
-        │   ├── logout.html
-        │   ├── register.html
-        │   ├── reset_password.html
-        │   └── reset_token.html
-        ├── error_pages/
-        │   └── 403.html
-        └── user/
-            ├── dashboard.html
-            ├── info.html
-            ├── parser_info.html
-            ├── profile_user.html
-            └── wallet.html
+    ├───routes/
+    |   |
+    │   ├─── admin.py
+    │   ├─── auth.py
+    │   ├─── error_pages.py
+    │   ├─── main.py
+    │   ├─── user.py
+    │   └─── __init__.py
+    │
+    ├───services/
+    |   |
+    │   ├─── get_token.py
+    │   ├─── send_email.py
+    │   ├─── write_log_entries.py
+    │   └─── __init__.py
+    │
+    ├───static/
+    |   |
+    │   ├─── favicon.ico
+    │   └─── robots.txt
+    │
+    ├───templates/
+    |   |
+    │   ├─── index.html
+    │   │
+    │   ├───admin/
+    |   |   |
+    │   │   └─── control_panel.html
+    │   │
+    │   ├───auth/
+    |   |   |
+    │   │   ├─── login.html
+    │   │   ├─── logout.html
+    │   │   ├─── register.html
+    │   │   ├─── reset_password.html
+    │   │   └─── reset_token.html
+    │   │
+    │   ├───error_pages/
+    |   |   |
+    │   │   └─── 403.html
+    │   │
+    │   └───user/
+    |       |
+    │       ├─── dashboard.html
+    │       ├─── parser_info.html
+    │       ├─── profile_user.html
+    │       └─── wallet.html
+    │
+    └───utils/
+        |
+        ├─── check_xml_encoding.py
+        ├─── decorator_admin.py
+        ├─── decorator_user.py
+        ├─── load_data_json.py
+        └─── __init__.py
 ```
 
 ---
@@ -187,7 +222,7 @@ lxml
 ```
 
 ---
-### ./run.py
+### ./run.py -> debug=True and wsgi.py -> debug=False
 ```bash
 python3 ./run.py || python.exe ./run.py
 ```
@@ -208,7 +243,7 @@ from flask import Flask
 from flask_mail import Mail
 from flask_caching import Cache
 from app.config import Config
-from app.core_utils import connect_database
+from app.database import connect_database
 
 mail = Mail()
 cache = Cache()
@@ -227,11 +262,11 @@ def create_app():
     connect_database.init_app(app)
 
     # Đăng ký Blueprints
-    from app.backend_modules.admin import admin_bp
-    from app.backend_modules.auth import auth_bp
-    from app.backend_modules.error_pages import error_pages_bp
-    from app.backend_modules.main import main_bp
-    from app.backend_modules.user import user_bp
+    from app.routes.admin import admin_bp
+    from app.routes.auth import auth_bp
+    from app.routes.error_pages import error_pages_bp
+    from app.routes.main import main_bp
+    from app.routes.user import user_bp
 
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -277,16 +312,215 @@ class Config:
 ```
 ---
 
-### app/backend_modules/admin.py
+### app/controllers/user_xml_paser_controller.py
 ```python
-from flask import Blueprint, render_template, session, jsonify, request, make_response, current_app
-from app.core_utils.load_data_json import load_data, data_file_users, data_file_admins
-from app.core_utils.decorator_admin import admin_required
+ffrom flask import request, render_template, session
+from app.services.write_log_entries import count_log_entries
+from app.utils.check_xml_encoding import get_xml_encoding_lxml
+from lxml import etree
+from app.config import Config
+from datetime import datetime
+
+def handle_parser_info():
+    
+    try:
+        if not request.content_type.startswith('application/xml'):
+            return render_template('user/parser_info.html', error="Invalid content type. Only application/xml is accepted.")
+        
+        raw_data = request.data
+        if not raw_data:
+            raise ValueError("No XML data provided.")
+
+        encoding = get_xml_encoding_lxml(raw_data)
+        if encoding.lower() != 'utf-8':
+            return render_template('user/parser_info.html', error=f"Only UTF-8 is allowed. Got: {encoding}")
+        
+        config_parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+        config_root = etree.fromstring(raw_data, parser=config_parser)
+        profile_parser = etree.XMLParser(resolve_entities=True, load_dtd=True, no_network=False)
+        profile_root = etree.fromstring(raw_data, parser=profile_parser)
+
+        username = session.get('username')
+        is_admin = session.get('is_admin')
+        email = config_root.findtext('email')
+        balance = config_root.findtext('balance')
+        setting = config_root.findtext('setting')
+        profile = profile_root.findtext('profile')
+
+        entry_number = count_log_entries(Config.LOG_FILE_RELATIVE_PATH) + 1
+        timestamp = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        log_entry = (
+            f"\n[Entry #{entry_number}]\n"
+            f"Username: {username}\nIs_admin: {is_admin}\n"
+            f"Email: {email}\nBalance: {balance}\n"
+            f"Profile: {profile}\nSetting: {setting}\n"
+            f"Time: {timestamp}\n\n---------------------------"
+        )
+        with open(Config.LOG_FILE_RELATIVE_PATH, 'a') as log_file:
+            log_file.write(log_entry)
+
+        return render_template('user/parser_info.html', success="Data Saved Successfully!")
+
+    except Exception as e:
+        return render_template('user/parser_info.html', error=str(e))
+```
+---
+### app/data/admins.json
+```json
+{
+    "admin1": ["John Handler", "age 30", "number-phone: 099999213616", "id:10", "role='admin'"],
+    "admin2": ["John Handler", "age 30", "number-phone: 099999213616", "id:30", "role='admin'"],
+    "root": ["DevOps", "age 25", "number-phone: 093324664", "id:1812", "role=root", "path=/api/update-path", "username=root", "password=root100020149292"]
+}
+```
+---
+
+### app/data/users.json
+```json
+{
+    "Hunter": ["Bug Hunter", "age 20", "number-phone: 063313535", "id:10"],
+    "John": ["John Hardler", "age 26", "number-phone: 01636315613", "id:20"]
+}
+```
+---
+
+### app/database/connect_database.py
+```python
+import sqlite3
+import os
+
+from flask import g
+from app.config import Config
+from app.core_utils.init_db import initialize_database
+
+def get_db_connection():
+    """
+    Opens a SQLite database connection and caches it on flask.g.
+    """
+    if 'db_conn' not in g:
+        db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        g.db_conn = conn
+    return g.db_conn
+
+
+def close_db_connection(e=None):
+    """
+    Closes the SQLite database connection if it exists.
+    """
+    db_conn = g.pop('db_conn', None)
+    if db_conn is not None:
+        db_conn.close()
+
+
+def _initialize_database_file():
+    """
+    Creates the database file and initializes schema if it doesn't exist.
+    """
+    db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+    if not os.path.exists(db_path):
+        try:
+            initialize_database(db_path)
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize database: {e}")
+            raise
+
+
+def init_app(app):
+    """
+    Registers teardown and ensures the database file exists on startup.
+    """
+    app.teardown_appcontext(close_db_connection)
+    with app.app_context():
+        _initialize_database_file()
+```
+---
+
+### app/database/init_db.py
+```python
+import sqlite3
+from werkzeug.security import generate_password_hash
+from app.config import Config
+
+database_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+
+def initialize_database(database_path):
+    # Kết nối DB
+    connection = sqlite3.connect(database_path)
+    curr = connection.cursor()
+
+    # Tạo bảng users
+    curr.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT NOT NULL,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        number_phone TEXT NOT NULL,
+        website_company TEXT NOT NULL,
+        birth_date DATE NOT NULL,
+        is_admin INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # Tạo mật khẩu đã hash
+    root_pass = generate_password_hash("root123")
+    admin_pass = generate_password_hash("admin123")
+    guest_pass = generate_password_hash("guest123")
+
+    # Insert người dùng
+    curr.execute('''
+    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', ("root", root_pass, "root@codetoanbug.com", "Root", "User", "092316186", "coding.codetoanbug.com", "1990-03-11", 1))
+
+    curr.execute('''
+    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', ("admin", admin_pass, "admin@codetoanbug.com", "Admin", "User", "098285213", "labs.codetoanbug.com", "1990-03-11", 1))
+
+    curr.execute('''
+    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', ("guest", guest_pass, "guest@codetoanbug.com", "Guest", "User", "095358553", "codetoanbug.com", "1990-03-11", 0))
+
+    # Lưu và đóng DB
+    connection.commit()
+    connection.close()
+```
+---
+
+### app/http/nginx.conf
+```config
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://bug_bounty_web:5505;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+}
+```
+---
+
+### app/routes/admin.py
+```python
+from flask import Blueprint, render_template, session, jsonify, request, make_response
+from app.utils.load_data_json import load_data, data_file_users, data_file_admins
+from app.utils.decorator_admin import admin_required
+from app.config import Config
 import os
 
 admin_bp = Blueprint('admin', __name__)
 
-@admin_bp.route('/admin-panel-131315315211', methods=['GET', 'POST'])
+@admin_bp.route('/dashboard', methods=['GET', 'POST'])
 @admin_required 
 def admin_panel():
 
@@ -314,14 +548,12 @@ def admin_panel():
     
     return render_template('admin/control_panel.html', username=session.get('username'))
     
-@admin_bp.route('/admin-panel-131315315211/logs', methods=['GET'])
+@admin_bp.route('/logs', methods=['GET'])
 @admin_required
 def read_logs():
 
-    log_file_path = current_app.config.get('LOG_FILE_PATH')
-
     try:
-        with open(log_file_path, 'r') as f:
+        with open(Config.LOG_FILE_RELATIVE_PATH, 'r') as f:
             log_data = f.read()
         response= make_response(log_data)
         response.headers['Content-Type'] = 'text/html'
@@ -333,14 +565,14 @@ def read_logs():
 ---
 
 
-### app/backend_routes/auth.py
+### app/routes/auth.py
 ```python
 from flask import Blueprint, render_template, request, redirect, url_for, session, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.core_utils.connect_database import get_db_connection
-from app.core_utils.get_token import get_token_serializer
+from app.database.connect_database import get_db_connection
+from app.services.get_token import get_token_serializer
 from itsdangerous import BadSignature, SignatureExpired
-from app.core_utils.send_email import send_reset_email
+from app.services.send_email import send_reset_email
 from .. import cache
 from bleach import clean
 
@@ -513,7 +745,7 @@ def logout():
     return response
 ```
 ---
-### app/backend_routes/error_pages.py
+### app/routes/error_pages.py
 ```python
 from flask import Blueprint, render_template
 
@@ -526,7 +758,7 @@ def page_403():
 ```
 
 ---
-### app/backend_routes/main.py
+### app/routes/main.py
 ```python
 from flask import Blueprint, render_template
 
@@ -539,12 +771,12 @@ def index():
 ---
 
 
-### app/backend_routes/user.py
+### app/routes/user.py
 ```python
 from flask import Blueprint, render_template, request, session, render_template_string
 from bleach import clean
-from app.core_utils.decorator_user import user_required
-from app.core_utils.parser_xml import handle_parser_info
+from app.utils.decorator_user import user_required
+from app.controllers.user_xml_paser_controller import handle_parser_info
 
 
 user_bp = Blueprint('user', __name__)
@@ -589,119 +821,7 @@ def dashboard():
 ```
 ---
 
-### app/core_utils/check_xml_encoding.py
-```python
-import re
-
-def get_xml_encoding_lxml(xml_bytes: bytes) -> str:
-
-    try:
-        # decode as ascii to extract encoding declaration
-        head = xml_bytes[:100].decode('ascii', errors='ignore')
-        match = re.search(r'encoding=[\'"]([\w-]+)[\'"]', head)
-
-        if match:
-            return match.group(1).lower()
-        return 'utf-8' # default per XML spec
-    
-    except Exception:
-        return 'Not Allow'
-```
----
-### app/core_utils/connect_database.py
-```python
-import sqlite3
-import os
-
-from flask import g
-from app.config import Config
-from app.core_utils.init_db import initialize_database
-
-def get_db_connection():
-    """
-    Opens a SQLite database connection and caches it on flask.g.
-    """
-    if 'db_conn' not in g:
-        db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        g.db_conn = conn
-    return g.db_conn
-
-
-def close_db_connection(e=None):
-    """
-    Closes the SQLite database connection if it exists.
-    """
-    db_conn = g.pop('db_conn', None)
-    if db_conn is not None:
-        db_conn.close()
-
-
-def _initialize_database_file():
-    """
-    Creates the database file and initializes schema if it doesn't exist.
-    """
-    db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
-    if not os.path.exists(db_path):
-        try:
-            initialize_database(db_path)
-        except Exception as e:
-            print(f"[ERROR] Failed to initialize database: {e}")
-            raise
-
-
-def init_app(app):
-    """
-    Registers teardown and ensures the database file exists on startup.
-    """
-    app.teardown_appcontext(close_db_connection)
-    with app.app_context():
-        _initialize_database_file()
-```
----
-
-### app/core_utils/decorator_admin.py
-```python
-from functools import wraps
-from flask import session, url_for, redirect
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        
-        # if client don't have session -> redirect to login():
-        if not session.get('username'):
-            return redirect(url_for('auth.login'))
-        
-        # if client don't have value: is_admin = True -> redirect to 403.html
-        if session.get('is_admin') == False:
-            return redirect(url_for('error_pages.page_403'))
-
-        return f(*args, **kwargs)
-    return decorated_function
-```
----
-
-### app/core_utils/decorator_user.py
-```python
-from functools import wraps
-from flask import session, url_for, redirect
-
-def user_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-
-        # if client don't have session -> redirect to login():
-        if not session.get('username'):
-            return redirect(url_for('auth.login'))
-
-        return f(*args, **kwargs)
-    return decorated_function
-```
----
-
-### app/core_utils/get_token.py
+### app/services/get_token.py
 ```python
 from itsdangerous import URLSafeSerializer
 from app.config import Config
@@ -711,138 +831,7 @@ def get_token_serializer():
 ```
 ---
 
-### app/core_utils/init_db.py
-```python
-import sqlite3
-from werkzeug.security import generate_password_hash
-from app.config import Config
-
-database_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
-
-def initialize_database(database_path):
-    # Kết nối DB
-    connection = sqlite3.connect(database_path)
-    curr = connection.cursor()
-
-    # Tạo bảng users
-    curr.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        email TEXT NOT NULL,
-        first_name TEXT NOT NULL,
-        last_name TEXT NOT NULL,
-        number_phone TEXT NOT NULL,
-        website_company TEXT NOT NULL,
-        birth_date DATE NOT NULL,
-        is_admin INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
-
-    # Tạo mật khẩu đã hash
-    root_pass = generate_password_hash("root123")
-    admin_pass = generate_password_hash("admin123")
-    guest_pass = generate_password_hash("guest123")
-
-    # Insert người dùng
-    curr.execute('''
-    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("root", root_pass, "root@codetoanbug.com", "Root", "User", "092316186", "coding.codetoanbug.com", "1990-03-11", 1))
-
-    curr.execute('''
-    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("admin", admin_pass, "admin@codetoanbug.com", "Admin", "User", "098285213", "labs.codetoanbug.com", "1990-03-11", 1))
-
-    curr.execute('''
-    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("guest", guest_pass, "guest@codetoanbug.com", "Guest", "User", "095358553", "codetoanbug.com", "1990-03-11", 0))
-
-    # Lưu và đóng DB
-    connection.commit()
-    connection.close()
-```
----
-
-### app/core_utils/load_data_json.py
-```python
-from app.config import Config
-import os
-import json
-
-data_file_users = Config.DATA_FILE_PATH_USERS
-data_file_admins = Config.DATA_FILE_PATH_ADMINS
-
-def load_data(file_path):
-    
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File {file_path} Not Found! Please Check File Again")
-    
-    with open(file_path, "r", encoding="utf-8") as f:
-        data = json.loads(f)
-        return data
-```
----
-
-### app/core_utils/parser_xml.py
-```python
-from flask import request, render_template, session
-from app.core_utils.write_log_entries import count_log_entries
-from app.core_utils.check_xml_encoding import get_xml_encoding_lxml
-from lxml import etree
-from app.config import Config
-from datetime import datetime
-
-def handle_parser_info():
-    
-    try:
-        if not request.content_type.startswith('application/xml'):
-            return render_template('user/parser_info.html', error="Invalid content type. Only application/xml is accepted.")
-        
-        raw_data = request.data
-        if not raw_data:
-            raise ValueError("No XML data provided.")
-
-        encoding = get_xml_encoding_lxml(raw_data)
-        if encoding.lower() != 'utf-8':
-            return render_template('user/parser_info.html', error=f"Only UTF-8 is allowed. Got: {encoding}")
-        
-        config_parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-        config_root = etree.fromstring(raw_data, parser=config_parser)
-        profile_parser = etree.XMLParser(resolve_entities=True, load_dtd=True, no_network=False)
-        profile_root = etree.fromstring(raw_data, parser=profile_parser)
-
-        username = session.get('username')
-        is_admin = session.get('is_admin')
-        email = config_root.findtext('email')
-        balance = config_root.findtext('balance')
-        setting = config_root.findtext('setting')
-        profile = profile_root.findtext('profile')
-
-        entry_number = count_log_entries(Config.LOG_FILE_RELATIVE_PATH) + 1
-        timestamp = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
-        log_entry = (
-            f"\n[Entry #{entry_number}]\n"
-            f"Username: {username}\nIs_admin: {is_admin}\n"
-            f"Email: {email}\nBalance: {balance}\n"
-            f"Profile: {profile}\nSetting: {setting}\n"
-            f"Time: {timestamp}\n\n---------------------------"
-        )
-        with open(Config.LOG_FILE_RELATIVE_PATH, 'a') as log_file:
-            log_file.write(log_entry)
-
-        return render_template('user/parser_info.html', success="Data Saved Successfully!")
-
-    except Exception as e:
-        return render_template('user/parser_info.html', error=str(e))
-```
----
-
-### app/core_utils/send_email.py
+### app/services/send_email.py
 ```python
 from flask_mail import Message
 from threading import Thread
@@ -869,7 +858,7 @@ def send_reset_email(email, reset_url):
 ```
 ---
 
-### app/core_utils/write_log_entries.py
+### app/services/write_log_entries.py
 ```python
 from app.config import Config
 
@@ -888,37 +877,91 @@ def count_log_entries(filename=log_file_path):
 ```
 ---
 
-### app/json_information/admins.json
-```json
-{
-    "admin1": ["John Handler", "age 30", "number-phone: 099999213616", "id:10", "role='CTB{real_admin_flag}'"],
-    "admin2": ["John Handler", "age 30", "number-phone: 099999213616", "id:30", "role='CTB{real_admin_flag}'"],
-    "root": ["DevOps", "age 25", "number-phone: 093324664", "id:1812", "role=root", "path=/api/update-path", "username=root", "password=root100020149292"]
-}
+### app/utils/check_xml_encoding.py
+```python
+import re
+
+def get_xml_encoding_lxml(xml_bytes: bytes) -> str:
+
+    try:
+        # decode as ascii to extract encoding declaration
+        head = xml_bytes[:100].decode('ascii', errors='ignore')
+        match = re.search(r'encoding=[\'"]([\w-]+)[\'"]', head)
+
+        if match:
+            return match.group(1).lower()
+        return 'utf-8' # default per XML spec
+    
+    except Exception:
+        return 'Not Allow'
 ```
 ---
 
-### app/json_information/users.json
+### app/utils/decorator_admin.py
+```python
+from functools import wraps
+from flask import session, url_for, redirect
 
-```json
-{
-    "Hunter": ["Bug Hunter", "age 20", "number-phone: 063313535", "id:10"],
-    "John": ["John Hardler", "age 26", "number-phone: 01636315613", "id:20"]
-}
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        
+        # if client don't have session -> redirect to login():
+        if not session.get('username'):
+            return redirect(url_for('auth.login'))
+        
+        # if client don't have value: is_admin = True -> redirect to 403.html
+        if session.get('is_admin') == False:
+            return redirect(url_for('error_pages.page_403'))
+
+        return f(*args, **kwargs)
+    return decorated_function
 ```
 ---
 
-### app/logs/logs.txt
+### app/utils/decorator_user.py
+```python
+from functools import wraps
+from flask import session, url_for, redirect
+
+def user_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+
+        # if client don't have session -> redirect to login():
+        if not session.get('username'):
+            return redirect(url_for('auth.login'))
+
+        return f(*args, **kwargs)
+    return decorated_function
 ```
-None
+---
+
+### app/utils/load_data_json.py
+```python
+from app.config import Config
+import os
+import json
+
+data_file_users = Config.DATA_FILE_PATH_USERS
+data_file_admins = Config.DATA_FILE_PATH_ADMINS
+
+def load_data(file_path):
+    
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {file_path} Not Found! Please Check File Again")
+    
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = json.loads(f)
+        return data
 ```
 ---
 
 ### app/static/robots.txt
 ```text
 User-agent: *
-Disallow: /admin-panel-131315315211
-Disallow: /admin-panel-131315315211/logs
+Disallow: /admin/dashboard
+Disallow: /admin/logs
 
 User-agent: *
 allow: /
@@ -1100,22 +1143,22 @@ allow: /logout
 
         <ul class="menu">
             <li>
-                <a href="/admin/admin-panel-131315315211/profile">
+                <a href="/admin/profile">
                     <span class="material-symbols-rounded">person</span> Profile
                 </a>
             </li>
             <li>
-                <a href="/admin/admin-panel-131315315211/settings">
+                <a href="/admin/settings">
                     <span class="material-symbols-rounded">settings</span> Settings
                 </a>
             </li>
             <li>
-                <a href="/admin/admin-panel-131315315211/notifications">
+                <a href="/admin/notifications">
                     <span class="material-symbols-rounded">notifications</span> Update Notification
                 </a>
             </li>
             <li>
-                <a href="/admin/admin-panel-131315315211/logs">
+                <a href="/admin/logs">
                     <span class="material-symbols-rounded">list_alt</span> Logs
                 </a>
             </li>

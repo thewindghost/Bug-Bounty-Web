@@ -8,75 +8,89 @@ This repository intentionally includes many security bugs discovered during my b
 ```mermaid
 graph TD
     A[Bug-Bounty-Web/] --> A1[.env]
-    A --> A2[README.md]
-    A --> A3[requirements.txt]
-    A --> A4[run.py]
+    A --> A2[.gitignore]
+    A --> A3[docker-compose.yml]
+    A --> A4[Dockerfile]
+    A --> A5[LICENSE]
+    A --> A6[README.md]
+    A --> A7[requirements.txt]
+    A --> A8[run.py]
+    A --> A9[wsgi.py]
     A --> B[app/]
 
-    B --> B1[__init__.py]
-    B --> B2[config.py]
+    B --> B1[config.py]
+    B --> B2[__init__.py]
 
-    B --> C[backend_routes/]
-    C --> C1[__init__.py]
-    C --> C2[main.py]
-    C --> C3[auth.py]
-    C --> C4[user.py]
-    C --> C5[admin.py]
-    C --> C6[error_pages.py]
+    B --> C[controllers/]
+    C --> C1[user_xml_paser_controller.py]
+    C --> C2[__init__.py]
 
-    B --> D[core_utils/]
-    D --> D1[__init__.py]
-    D --> D2[connect_database.py]
-    D --> D3[init_db.py]
-    D --> D4[load_data_json.py]
-    D --> D5[check_xml_encoding.py]
-    D --> D6[parser_xml.py]
-    D --> D7[decorator_user.py]
-    D --> D8[decorator_admin.py]
-    D --> D9[get_token.py]
-    D --> D10[send_email.py]
-    D --> D11[write_log_entries.py]
+    B --> D[data/]
+    D --> D1[admins.json]
+    D --> D2[users.json]
 
-    B --> E[json_information/]
-    E --> E1[users.json]
-    E --> E2[admins.json]
+    B --> E[database/]
+    E --> E1[connect_database.py]
+    E --> E2[database.db]
+    E --> E3[init_db.py]
+    E --> E4[__init__.py]
 
-    B --> F[logs/]
-    F --> F1[logs.txt]
+    B --> F[http/]
+    F --> F1[nginx.conf]
 
-    B --> G[static/]
-    G --> G1[favicon.ico]
-    G --> G2[robots.txt]
+    B --> G[logs/]
+    G --> G1[logs.txt]
 
-    B --> H[templates/]
-    H --> H1[index.html]
-    H --> H2[admin/]
-    H2 --> H21[control_panel.html]
-    H --> H3[auth/]
-    H3 --> H31[login.html]
-    H3 --> H32[logout.html]
-    H3 --> H33[register.html]
-    H3 --> H34[reset_password.html]
-    H3 --> H35[reset_token.html]
-    H --> H4[error_pages/]
-    H4 --> H41[403.html]
-    H --> H5[user/]
-    H5 --> H51[dashboard.html]
-    H5 --> H52[info.html]
-    H5 --> H53[parser_info.html]
-    H5 --> H54[profile_user.html]
-    H5 --> H55[wallet.html]
+    B --> H[routes/]
+    H --> H1[admin.py]
+    H --> H2[auth.py]
+    H --> H3[error_pages.py]
+    H --> H4[main.py]
+    H --> H5[user.py]
+    H --> H6[__init__.py]
 
-    %% Style tất cả node cho sáng hơn và chữ to
-    classDef bright fill:#1e1e1e,stroke:#fff,color:#f8f8f8,font-size:18px;
-    
-    class A,A1,A2,A3,A4,B,B1,B2 bright;
-    class C,C1,C2,C3,C4,C5,C6 bright;
-    class D,D1,D2,D3,D4,D5,D6,D7,D8,D9,D10,D11 bright;
-    class E,E1,E2 bright;
-    class F,F1 bright;
-    class G,G1,G2 bright;
-    class H,H1,H2,H21,H3,H31,H32,H33,H34,H35,H4,H41,H5,H51,H52,H53,H54,H55 bright;
+    B --> I[services/]
+    I --> I1[get_token.py]
+    I --> I2[send_email.py]
+    I --> I3[write_log_entries.py]
+    I --> I4[__init__.py]
+
+    B --> J[static/]
+    J --> J1[favicon.ico]
+    J --> J2[robots.txt]
+
+    B --> K[templates/]
+    K --> K1[index.html]
+    K --> K2[admin/]
+    K2 --> K21[control_panel.html]
+    K --> K3[auth/]
+    K3 --> K31[login.html]
+    K3 --> K32[logout.html]
+    K3 --> K33[register.html]
+    K3 --> K34[reset_password.html]
+    K3 --> K35[reset_token.html]
+    K --> K4[error_pages/]
+    K4 --> K41[403.html]
+    K --> K5[user/]
+    K5 --> K51[dashboard.html]
+    K5 --> K52[parser_info.html]
+    K5 --> K53[profile_user.html]
+    K5 --> K54[wallet.html]
+
+    B --> L[utils/]
+    L --> L1[check_xml_encoding.py]
+    L --> L2[decorator_admin.py]
+    L --> L3[decorator_user.py]
+    L --> L4[load_data_json.py]
+    L --> L5[__init__.py]
+
+    %% Style
+    classDef bright fill:#1e1e1e,stroke:#fff,color:#f8f8f8,font-size:16px;
+    class A,A1,A2,A3,A4,A5,A6,A7,A8,A9,B,B1,B2 bright;
+    class C,C1,C2,D,D1,D2,E,E1,E2,E3,E4,F,F1,G,G1 bright;
+    class H,H1,H2,H3,H4,H5,H6,I,I1,I2,I3,I4,J,J1,J2 bright;
+    class K,K1,K2,K21,K3,K31,K32,K33,K34,K35,K4,K41,K5,K51,K52,K53,K54 bright;
+    class L,L1,L2,L3,L4,L5 bright;
 ```
 
 ---

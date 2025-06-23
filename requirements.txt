@@ -6,3 +6,4 @@ itsdangerous
 python-dotenv
 bleach
 lxml
+gunicorn

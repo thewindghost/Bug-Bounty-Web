@@ -14,15 +14,16 @@ python3 ./run.py or python.exe ./run.py
 ```
 ---
 
-### Build with docker-compose for pentest
+### Build with docker-compose for security researcher
 ```bash
 docker-compose up -d && docker-compose build
 ```
 ---
 
 ### Note: if you have updated the code from local and want docker container to have that code. Run the docker-compose build command again
+#### Warning: There is a tool to clean all unused docker containers and docker images, use with caution.
 ```bash
-docker-compose build && docker-compose up -d
+sh clean_docker_not_using.sh && docker-compose build && docker-compose up -d
 ```
 ---
 
@@ -38,6 +39,8 @@ graph TD
     A --> A7[requirements.txt]
     A --> A8[run.py]
     A --> A9[wsgi.py]
+    A --> A10[clean_docker_not_using.sh]
+    A --> A11[.gitattributes]
     A --> B[app/]
 
     B --> B1[config.py]
@@ -121,6 +124,8 @@ graph TD
 Bug-Bounty-Web/
 ├─── .env or .env.example                       # Biến môi trường (SECRET_KEY, DB path, Mail config, ...)
 ├─── .gitignore                                 # không push cách file chỉ định trong đây
+├─── .gitattributes                             # thêm vào tránh bị tự chuyển đổi End-of-Line của file .sh từ LF thành CRLF
+├─── clean_docker_not_using.sh                  # xoá toàn bộ container và image không sử dụng
 ├─── docker-compose.yml                         # deloy server với compose
 ├─── Dockerfile                                
 ├─── LICENSE
@@ -239,6 +244,13 @@ INIT_DB_FILE_RELATIVE_PATH=./app/backend_utils/init_db.py
 DB_CONNECTION_FILE_RELATIVE_PATH=./app/backend_utils/database.db
 DATA_FILE_PATH_USERS=./app/info_json_information/admins.json
 DATA_FILE_PATH_ADMINS=./app/info_json_information/users.json
+```
+---
+### clean_docker_not_using.sh
+```sh
+#!/bin/sh
+docker container prune -f
+docker image prune -a -f
 ```
 ---
 

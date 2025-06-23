@@ -35,17 +35,17 @@ def initialize_database(database_path):
     curr.execute('''
     INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("root", root_pass, "root@codetoanbug.com", "Root", "User", "092316186", "coding.codetoanbug.com", "1990-03-11", 1))
+    ''', ("root", root_pass, "root@example.com", "Root", "User", "092316186", "coding.example.com", "1990-03-11", 1))
 
     curr.execute('''
     INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("admin", admin_pass, "admin@codetoanbug.com", "Admin", "User", "098285213", "labs.codetoanbug.com", "1990-03-11", 1))
+    ''', ("admin", admin_pass, "admin@example.com", "Admin", "User", "098285213", "labs.example.com", "1990-03-11", 1))
 
     curr.execute('''
     INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("guest", guest_pass, "guest@codetoanbug.com", "Guest", "User", "095358553", "codetoanbug.com", "1990-03-11", 0))
+    ''', ("guest", guest_pass, "guest@example.com", "Guest", "User", "095358553", "example.com", "1990-03-11", 0))
 
     # Lưu và đóng DB
     connection.commit()

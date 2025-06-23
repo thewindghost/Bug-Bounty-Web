@@ -7,7 +7,7 @@ This repository intentionally includes many security bugs discovered during my b
 ## Mermaid Diagram
 ```mermaid
 graph TD
-    A[Bug-Bounty-Web/] --> A1[.env]
+    A[Bug-Bounty-Web/] --> A1[.env or .env.example]
     A --> A2[.gitignore]
     A --> A3[docker-compose.yml]
     A --> A4[Dockerfile]

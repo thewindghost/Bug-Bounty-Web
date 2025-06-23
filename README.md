@@ -97,7 +97,7 @@ graph TD
 ## Project Structure
 ```
 Bug-Bounty-Web/
-├─── .env                                       # Biến môi trường (SECRET_KEY, DB path, Mail config, ...)
+├─── .env or .env.example                       # Biến môi trường (SECRET_KEY, DB path, Mail config, ...)
 ├─── .gitignore                                 # không push cách file chỉ định trong đây
 ├─── docker-compose.yml                         # deloy server với compose
 ├─── Dockerfile                                

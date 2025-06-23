@@ -4,6 +4,28 @@ This repository intentionally includes many security bugs discovered during my b
 **Do NOT deploy to production, but you can practice in here for pentest skills.**
 
 ---
+## How can Build ?
+
+### Build for developer
+```bash
+python => 3.10 version
+pip install -r requirements.txt
+python3 ./run.py or python.exe ./run.py
+```
+---
+
+### Build with docker-compose for pentest
+```bash
+docker-compose up -d && docker-compose build
+```
+---
+
+### Note: if you have updated the code from local and want docker container to have that code. Run the docker-compose build command again
+```bash
+docker-compose build && docker-compose up -d
+```
+---
+
 ## Mermaid Diagram
 ```mermaid
 graph TD
@@ -220,13 +242,6 @@ DATA_FILE_PATH_ADMINS=./app/info_json_information/users.json
 ```
 ---
 
-### Running with docker-compose ?
-```bash
-docker-compose up -d && docker-compose build
-```
-#### Note: if you have updated the code from local and want docker container to have that code. Run the docker-compose build command above again
----
-
 ### docker-compose.yml
 ```yaml
 version: '3.8'
@@ -277,9 +292,6 @@ CMD ["gunicorn", "-w 1", "--bind", "0.0.0.0:5505", "wsgi:app"]
 ---
 
 ### ./requirements.txt
-```bash
-pip install -r requirements
-```
 ```text
 Flask
 blueprint
@@ -293,9 +305,6 @@ lxml
 
 ---
 ### ./run.py -> debug=True and wsgi.py -> debug=False
-```bash
-python3 ./run.py || python.exe ./run.py
-```
 ```python
 from app import create_app
 
@@ -1054,61 +1063,8 @@ allow: /logout
     <title>Web Site Ebook</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Consolas', 'Courier New', monospace;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #00ff99;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            background-color: rgba(0, 0, 0, 0.85);
-            padding: 40px 60px;
-            border-radius: 15px;
-            box-shadow: 0 0 15px #00ff99;
-            max-width: 450px;
-            text-align: center;
-            border: 2px solid #00ff99;
-        }
-
-        h1 {
-            font-size: 2.8rem;
-            margin-bottom: 30px;
-            letter-spacing: 3px;
-            text-shadow: 0 0 8px #00ff99;
-        }
-
-        .info {
-            font-size: 1.1rem;
-            margin: 18px 0;
-            color: #00ffaa;
-        }
-
-        a {
-            color: #00ff99;
-            text-decoration: none;
-            font-weight: 600;
-            border-bottom: 1.5px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        a:hover {
-            border-bottom: 1.5px solid #00ff99;
-            color: #00ffcc;
-            text-shadow: 0 0 6px #00ffcc;
-            cursor: pointer;
-        }
-
-        label {
-            display: block;
-        }
-    </style>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
@@ -1133,77 +1089,8 @@ allow: /logout
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .material-symbols-rounded {
-            font-variation-settings:
-                'FILL' 1,
-                'wght' 400,
-                'GRAD' 0,
-                'opsz' 24;
-            font-size: 20px;
-            vertical-align: middle;
-            color: #00ffa3;
-        }
-
-        .container {
-            background-color: rgba(20, 20, 30, 0.9);
-            padding: 40px 50px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px #00ffa3;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        h1 {
-            color: #00ffa3;
-            font-weight: 700;
-            font-size: 2.2rem;
-            letter-spacing: 1.5px;
-            margin: 0 0 30px 0;
-        }
-
-        ul.menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        ul.menu li a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 12px 20px;
-            border: 1px solid #00ffa3;
-            border-radius: 10px;
-            color: #00ffa3;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        ul.menu li a:hover {
-            background-color: #00ffa3;
-            color: #0f2027;
-        }
-    </style>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
@@ -1251,107 +1138,9 @@ allow: /logout
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
     <title>Login</title>
-    <style>
-        body {
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          color: #e0e0e0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          margin: 0;
-        }
-      
-        .container {
-          background-color: rgba(20, 20, 30, 0.9);
-          padding: 40px 50px;
-          border-radius: 15px;
-          box-shadow: 0 0 20px #00ffa3;
-          width: 360px;
-        }
-      
-        h1 {
-          text-align: center;
-          margin-bottom: 30px;
-          color: #00ffa3;
-          letter-spacing: 2px;
-        }
-      
-        form {
-          display: flex;
-          flex-direction: column;
-        }
-      
-        label {
-          margin-bottom: 8px;
-          font-weight: 600;
-          color: #00ffa3;
-        }
-      
-        input[type="text"],
-        input[type="password"] {
-          padding: 12px 15px;
-          margin-bottom: 20px;
-          border-radius: 8px;
-          border: none;
-          outline: none;
-          font-size: 1rem;
-          background-color: #121212;
-          color: #e0e0e0;
-          box-shadow: inset 0 0 8px #00ffa3;
-          transition: box-shadow 0.3s ease;
-        }
-      
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-          box-shadow: 0 0 10px #00ffa3;
-        }
-      
-        button {
-          background-color: #00ffa3;
-          border: none;
-          padding: 14px 0;
-          border-radius: 10px;
-          font-size: 1.1rem;
-          font-weight: 700;
-          color: #0f2027;
-          cursor: pointer;
-          transition: background-color 0.3s ease;
-        }
-      
-        button:hover {
-          background-color: #00cc7a;
-        }
-      
-        p {
-          margin-top: 20px;
-          text-align: center;
-          font-size: 0.9rem;
-          color: #a0ffa3;
-        }
-      
-        a {
-          color: #00ffa3;
-          text-decoration: none;
-          font-weight: 600;
-        }
-      
-        a:hover {
-          text-decoration: underline;
-        }
-      
-        /* Style cho thông báo lỗi */
-        p[style] {
-          margin-top: 15px;
-          text-align: center;
-          font-weight: 600;
-          color: royalblue;
-        }
-      </style>
-      
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
@@ -1383,36 +1172,9 @@ allow: /logout
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>Redirecting ...</title>
-  <style>
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      display: flex;
-      height: 100vh;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #e0e0e0;
-      margin: 0;
-    }
-
-    .logout-container {
-      text-align: center;
-      background-color: rgba(20, 20, 30, 0.9);
-      padding: 40px 60px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px #00ffa3;
-      width: 320px;
-      box-sizing: border-box;
-    }
-
-    .message {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #00ffa3;
-    }
-  </style>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <div class="logout-container">
@@ -1448,109 +1210,9 @@ allow: /logout
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>Registration Form</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #e0e0e0;
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden; /* Ẩn scroll trang chính */
-    }
-
-    .container {
-      background-color: rgba(20, 20, 30, 0.95);
-      padding: 30px 40px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px #00ffa3;
-      width: 100%;
-      max-width: 600px;
-      max-height: 90vh;
-      overflow-y: auto; /* Chỉ scroll nếu form vượt khung */
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    label {
-      margin-bottom: 4px;
-      font-weight: 600;
-      color: #a0ffa3;
-    }
-
-    input {
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      background-color: #121212;
-      color: #e0e0e0;
-      box-shadow: inset 0 0 5px #00ffa3;
-      transition: box-shadow 0.3s ease;
-    }
-
-    input:focus {
-      box-shadow: 0 0 10px #00ffa3;
-    }
-
-    button {
-      padding: 14px 20px;
-      background-color: #00ffa3;
-      color: #0f2027;
-      font-weight: 700;
-      font-size: 1.1rem;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 0 15px #00ffa3;
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      background-color: #00cc7a;
-      box-shadow: 0 0 25px #00cc7a;
-    }
-
-    p {
-      text-align: center;
-      font-weight: 600;
-      margin-top: 15px;
-    }
-
-    p a {
-      color: #00ffa3;
-      text-decoration: none;
-      font-weight: 700;
-    }
-
-    p a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <div class="container">
@@ -1623,82 +1285,8 @@ allow: /logout
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            font-family: 'Roboto', sans-serif;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            background-color: rgba(20, 20, 30, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 0 20px #00ffa3;
-            padding: 35px;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #00ffa3;
-            font-size: 2rem;
-            margin-bottom: 25px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            margin-bottom: 10px;
-            font-weight: 500;
-            color: #a0ffa3;
-        }
-
-        input[type="email"] {
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background-color: #1f1f2e;
-            color: #fff;
-            margin-bottom: 20px;
-            font-size: 1rem;
-        }
-
-        button {
-            background-color: #00ffa3;
-            color: #0f2027;
-            font-weight: bold;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #00cc7a;
-            box-shadow: 0 0 12px #00ffa3;
-        }
-
-        .material-symbols-rounded {
-            font-variation-settings: 'FILL' 1, 'wght' 400;
-            vertical-align: middle;
-            font-size: 22px;
-            color: #00ffa3;
-            margin-right: 6px;
-        }
-    </style>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
@@ -1729,82 +1317,8 @@ allow: /logout
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            font-family: 'Roboto', sans-serif;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            background-color: rgba(20, 20, 30, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 0 20px #00ffa3;
-            padding: 35px;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #00ffa3;
-            font-size: 2rem;
-            margin-bottom: 25px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            margin-bottom: 10px;
-            font-weight: 500;
-            color: #a0ffa3;
-        }
-
-        input[type="password"] {
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background-color: #1f1f2e;
-            color: #fff;
-            margin-bottom: 20px;
-            font-size: 1rem;
-        }
-
-        button {
-            background-color: #00ffa3;
-            color: #0f2027;
-            font-weight: bold;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #00cc7a;
-            box-shadow: 0 0 12px #00ffa3;
-        }
-
-        .material-symbols-rounded {
-            font-variation-settings: 'FILL' 1, 'wght' 400;
-            vertical-align: middle;
-            font-size: 22px;
-            color: #00ffa3;
-            margin-right: 6px;
-        }
-    </style>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
@@ -1832,58 +1346,9 @@ allow: /logout
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>403 Forbidden</title>
-  <style>
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #e0e0e0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .container {
-      background-color: rgba(20, 20, 30, 0.9);
-      padding: 40px 50px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px #00ffa3;
-      width: 480px;
-      text-align: center;
-    }
-
-    h1 {
-      color: #00ffa3;
-      margin-bottom: 20px;
-      font-size: 2rem;
-      letter-spacing: 1px;
-    }
-
-    p {
-      margin-bottom: 30px;
-      font-size: 1.1rem;
-      color: #a0ffa3;
-    }
-
-    button {
-      background-color: #00ffa3;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      color: #0f2027;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #00cc7a;
-    }
-  </style>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <div class="container">
@@ -1917,118 +1382,13 @@ allow: /logout
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
     
     <!-- Material Symbols Rounded -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
 
     <!-- Internal CSS -->
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            font-family: 'Roboto', sans-serif;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 40px 20px;
-            margin: 0;
-        }
-
-        .material-symbols-rounded {
-            font-variation-settings: 
-                'FILL' 1,
-                'wght' 400,
-                'GRAD' 0,
-                'opsz' 24;
-            font-size: 22px;
-            vertical-align: middle;
-            color: #00ffa3;
-        }
-
-        .dashboard-container {
-            background-color: rgba(20, 20, 30, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 0 20px #00ffa3;
-            width: 100%;
-            max-width: 480px;
-            padding: 30px 35px;
-        }
-
-        h1 {
-            font-weight: 700;
-            font-size: 2.4rem;
-            margin-bottom: 25px;
-            color: #00ffa3;
-            text-align: center;
-            letter-spacing: 2px;
-        }
-
-        .user-info h2 {
-            font-weight: 600;
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-            color: #a0ffa3;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .username {
-            color: #00ffa3;
-            font-weight: 700;
-        }
-
-        .status-active {
-            color: #00cc7a;
-            font-weight: 600;
-        }
-
-        .user-info p {
-            font-size: 1rem;
-            margin-bottom: 20px;
-            color: #cceee6;
-        }
-
-        .finance-info p {
-            font-size: 1rem;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #a0ffa3;
-        }
-
-        ul.navigation-links {
-            list-style: none;
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            padding-left: 0;
-        }
-
-        ul.navigation-links li a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            padding: 12px 20px;
-            background-color: #121212;
-            border-radius: 10px;
-            font-weight: 600;
-            color: #00ffa3;
-            box-shadow: 0 0 8px #00ffa3;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        ul.navigation-links li a:hover {
-            background-color: #00ffa3;
-            color: #0f2027;
-            box-shadow: 0 0 20px #00cc7a;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -2090,72 +1450,10 @@ allow: /logout
   <title>Parser Info</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/static/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
-  <style>
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #e0e0e0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .container {
-      background-color: rgba(20, 20, 30, 0.9);
-      padding: 40px 50px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px #00ffa3;
-      width: 100%;
-      max-width: 600px;
-      text-align: center;
-    }
-    h1 {
-      color: #00ffa3;
-      font-weight: 700;
-      font-size: 2rem;
-      margin-bottom: 25px;
-    }
-    textarea {
-      width: 100%;
-      height: 250px;
-      border: 1px solid #00ffa3;
-      border-radius: 10px;
-      padding: 15px;
-      background-color: #1c1c2b;
-      color: #ffffff;
-      font-size: 14px;
-      margin-bottom: 15px;
-      font-family: monospace;
-      resize: vertical;
-    }
-    button {
-      margin-top: 10px;
-      background-color: #00ffa3;
-      color: #0f2027;
-      padding: 12px 25px;
-      border: none;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #00cc88;
-    }
-    .message {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-    .success {
-      color: #00ffa3;
-    }
-    .error {
-      color: #ff4f4f;
-    }
-  </style>
+
 </head>
 <body>
   <div class="container">
@@ -2197,77 +1495,14 @@ allow: /logout
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <!-- Google Fonts -->
-     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
     
-     <!-- Material Icons -->
-     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
  
-     <!-- Internal CSS -->
-     <style>
-        body {
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-          font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          color: #e0e0e0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          margin: 0;
-        }
-      
-        .container {
-          background-color: rgba(20, 20, 30, 0.9);
-          padding: 40px 50px;
-          border-radius: 15px;
-          box-shadow: 0 0 20px #00ffa3;
-          width: 400px;
-          text-align: center;
-        }
-      
-        h1 {
-          color: #00ffa3;
-          font-weight: 700;
-          font-size: 2.2rem;
-          letter-spacing: 1.5px;
-          margin-bottom: 30px;
-        }
-      
-        .profile-info p {
-          font-size: 1.1rem;
-          color: #a0ffa3;
-          margin-bottom: 35px;
-        }
-      
-        li {
-          list-style: none;
-        }
-      
-        a {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          text-decoration: none;
-          font-weight: 600;
-          font-size: 1.1rem;
-          color: #00ffa3;
-          padding: 12px 25px;
-          background-color: #121212;
-          border-radius: 10px;
-          box-shadow: 0 0 8px #00ffa3;
-          transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-      
-        a:hover {
-          background-color: #00ffa3;
-          color: #0f2027;
-          box-shadow: 0 0 20px #00cc7a;
-        }
-      
-        .material-icons {
-          font-size: 22px;
-        }
-      </style>
+    <!-- Internal CSS -->
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
@@ -2295,102 +1530,9 @@ allow: /logout
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/static/styles.css">
     <title>Wallet</title>
-    <style>
-        body {
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-          font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          color: #e0e0e0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 100vh;
-          margin: 0;
-        }
-      
-        .container {
-          background-color: rgba(20, 20, 30, 0.9);
-          padding: 40px 50px;
-          border-radius: 15px;
-          box-shadow: 0 0 20px #00ffa3;
-          width: 380px;
-          box-sizing: border-box;
-          text-align: center;
-        }
-      
-        h2 {
-          color: #00ffa3;
-          font-weight: 700;
-          font-size: 2rem;
-          margin-bottom: 30px;
-        }
-      
-        label {
-          display: block;
-          margin-bottom: 8px;
-          font-weight: 600;
-          color: #a0ffa3;
-          text-align: left;
-        }
-      
-        input.balance-input {
-          width: 100%;
-          padding: 10px 12px;
-          border-radius: 8px;
-          border: none;
-          background-color: #121212;
-          color: #e0e0e0;
-          font-size: 1rem;
-          box-shadow: inset 0 0 5px #00ffa3;
-          outline: none;
-          margin-bottom: 25px;
-          transition: box-shadow 0.3s ease;
-        }
-      
-        input.balance-input:focus {
-          box-shadow: 0 0 12px #00ffa3;
-        }
-      
-        button.submit-button {
-          width: 100%;
-          padding: 14px 20px;
-          background-color: #00ffa3;
-          border: none;
-          border-radius: 12px;
-          font-weight: 700;
-          font-size: 1.1rem;
-          color: #0f2027;
-          cursor: pointer;
-          box-shadow: 0 0 15px #00ffa3;
-          transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-      
-        button.submit-button:hover {
-          background-color: #00cc7a;
-          box-shadow: 0 0 25px #00cc7a;
-        }
-      
-        .result-message, .error-message {
-          margin-top: 25px;
-          padding: 12px 20px;
-          border-radius: 12px;
-          font-weight: 600;
-          font-size: 1rem;
-        }
-      
-        .result-message {
-          background-color: rgba(0, 255, 163, 0.15);
-          color: #00ffa3;
-          box-shadow: 0 0 10px #00ffa3;
-        }
-      
-        .error-message {
-          background-color: rgba(255, 50, 50, 0.15);
-          color: #ff3232;
-          box-shadow: 0 0 10px #ff3232;
-        }
-      </style>
 </head>
 <body>
 

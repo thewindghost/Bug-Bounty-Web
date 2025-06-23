@@ -61,7 +61,8 @@ graph TD
     E --> E4[__init__.py]
 
     B --> F[http/]
-    F --> F1[nginx.conf]
+    F --> F1[ssl/]
+    F --> F2[nginx.conf]
 
     B --> G[logs/]
     G --> G1[logs.txt]
@@ -156,6 +157,8 @@ Bug-Bounty-Web/
     │   └─── __init__.py
     │
     ├───http/                                   # Nơi lưu trữ nginx.conf của server
+    |   |
+    |   ├───ssl/
     |   |
     │   └─── nginx.conf                         # File cấu hình của nginx server
     │

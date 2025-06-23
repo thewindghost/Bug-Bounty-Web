@@ -1,0 +1,52 @@
+import sqlite3
+from werkzeug.security import generate_password_hash
+from app.config import Config
+
+database_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+
+def initialize_database(database_path):
+    # Kết nối DB
+    connection = sqlite3.connect(database_path)
+    curr = connection.cursor()
+
+    # Tạo bảng users
+    curr.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT NOT NULL,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        number_phone TEXT NOT NULL,
+        website_company TEXT NOT NULL,
+        birth_date DATE NOT NULL,
+        is_admin INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # Tạo mật khẩu đã hash
+    root_pass = generate_password_hash("root123")
+    admin_pass = generate_password_hash("admin123")
+    guest_pass = generate_password_hash("guest123")
+
+    # Insert người dùng
+    curr.execute('''
+    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', ("root", root_pass, "root@codetoanbug.com", "Root", "User", "092316186", "coding.codetoanbug.com", "1990-03-11", 1))
+
+    curr.execute('''
+    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', ("admin", admin_pass, "admin@codetoanbug.com", "Admin", "User", "098285213", "labs.codetoanbug.com", "1990-03-11", 1))
+
+    curr.execute('''
+    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', ("guest", guest_pass, "guest@codetoanbug.com", "Guest", "User", "095358553", "codetoanbug.com", "1990-03-11", 0))
+
+    # Lưu và đóng DB
+    connection.commit()
+    connection.close()

@@ -2,7 +2,7 @@ from flask import Flask
 from flask_mail import Mail
 from flask_caching import Cache
 from app.config import Config
-from app.core_utils import connect_database
+from app.database import connect_database
 
 mail = Mail()
 cache = Cache()
@@ -21,11 +21,11 @@ def create_app():
     connect_database.init_app(app)
 
     # Đăng ký Blueprints
-    from app.backend_modules.admin import admin_bp
-    from app.backend_modules.auth import auth_bp
-    from app.backend_modules.error_pages import error_pages_bp
-    from app.backend_modules.main import main_bp
-    from app.backend_modules.user import user_bp
+    from app.routes.admin import admin_bp
+    from app.routes.auth import auth_bp
+    from app.routes.error_pages import error_pages_bp
+    from app.routes.main import main_bp
+    from app.routes.user import user_bp
 
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(auth_bp, url_prefix='/auth')

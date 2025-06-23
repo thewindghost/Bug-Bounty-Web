@@ -1,11 +1,12 @@
-from flask import Blueprint, render_template, session, jsonify, request, make_response, current_app
+from flask import Blueprint, render_template, session, jsonify, request, make_response
 from app.utils.load_data_json import load_data, data_file_users, data_file_admins
 from app.utils.decorator_admin import admin_required
+from app.config import Config
 import os
 
 admin_bp = Blueprint('admin', __name__)
 
-@admin_bp.route('/admin-panel-131315315211', methods=['GET', 'POST'])
+@admin_bp.route('/dashboard', methods=['GET', 'POST'])
 @admin_required 
 def admin_panel():
 
@@ -33,14 +34,12 @@ def admin_panel():
     
     return render_template('admin/control_panel.html', username=session.get('username'))
     
-@admin_bp.route('/admin-panel-131315315211/logs', methods=['GET'])
+@admin_bp.route('/logs', methods=['GET'])
 @admin_required
 def read_logs():
 
-    log_file_path = current_app.config.get('LOG_FILE_PATH')
-
     try:
-        with open(log_file_path, 'r') as f:
+        with open(Config.LOG_FILE_RELATIVE_PATH, 'r') as f:
             log_data = f.read()
         response= make_response(log_data)
         response.headers['Content-Type'] = 'text/html'

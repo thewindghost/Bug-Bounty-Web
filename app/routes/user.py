@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, session, render_template_string
 from bleach import clean
 from app.utils.decorator_user import user_required
-from app.controllers.xml_paser_controller import handle_parser_info
+from app.controllers.user_xml_paser_controller import handle_parser_info
 
 
 user_bp = Blueprint('user', __name__)
@@ -34,7 +34,7 @@ def update_balance():
 
 @user_bp.route('/profile', methods=['GET', 'POST'])
 @user_required
-def my_profile():
+def profile():
     
     return render_template('user/profile_user.html', template_rendered=clean(render_template_string(session['username'])))
 

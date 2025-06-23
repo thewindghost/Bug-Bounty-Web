@@ -1,3 +1,4 @@
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ## 🐞 Vulnerability Catalogue
 
 This repository intentionally includes many security bugs discovered during my bug bounty hunting.

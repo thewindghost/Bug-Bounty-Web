@@ -287,8 +287,11 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./app/http/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    # - - ./app/http/ssl:/etc/nginx/ssl:ro
+
 ```
 ---
 
@@ -607,7 +610,20 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
+}
 
+server {
+    listen 443 ssl;
+    server_name localhost;
+
+    ssl_certificate     /etc/nginx/ssl/fake-cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/fake-key.pem;
+
+    location / {
+        proxy_pass http://bug_bounty_web:5505;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
 }
 ```
 ---

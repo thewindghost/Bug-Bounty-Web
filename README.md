@@ -167,6 +167,8 @@ Bug-Bounty-Web/
     ├───http/                                   # Nơi lưu trữ nginx.conf của server
     |   |
     |   ├───ssl/
+    |   |     |
+    |   |     └─── server.cert                  # Nơi lưu trữ file chứng chỉ ssl của domain       
     |   |
     │   └─── nginx.conf                         # File cấu hình của nginx server
     │
@@ -190,8 +192,9 @@ Bug-Bounty-Web/
     │   ├─── write_log_entries.py               # Ghi log XML data submit vào file
     │   └─── __init__.py
     │
-    ├───static/                                 # 🌐 File static (favicon, robots.txt,...)
+    ├───static/                                 # 🌐 File static (style.css, favicon, robots.txt,...)
     |   |
+    |   ├─── style.css
     │   ├─── favicon.ico
     │   └─── robots.txt
     │
@@ -354,7 +357,7 @@ mail = Mail()
 cache = Cache()
 
 def create_app():
-    app = Flask(__name__, instance_relative_config=False, static_url_path="/", static_folder="static")
+    app = Flask(__name__, instance_relative_config=False, static_url_path="/static", static_folder="static")
 
     app.config.from_object(Config)
 
@@ -1091,6 +1094,170 @@ allow: /parser-info
 allow: /balances
 allow: /reset-password
 allow: /logout
+```
+---
+
+### app/static/style.css
+```css
+/* Unified styles for Bug-Bounty-Web */
+
+body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #e0e0e0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  
+  .container {
+    background-color: rgba(20, 20, 30, 0.9);
+    padding: 40px 50px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #00ffa3;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  
+  h1, h2 {
+    color: #00ffa3;
+    font-weight: 700;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+  
+  label {
+    font-weight: 600;
+    color: #a0ffa3;
+    margin-bottom: 8px;
+    display: block;
+    text-align: left;
+  }
+  
+  input, textarea {
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    background-color: #121212;
+    color: #e0e0e0;
+    box-shadow: inset 0 0 8px #00ffa3;
+    transition: box-shadow 0.3s ease;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  input:focus, textarea:focus {
+    box-shadow: 0 0 10px #00ffa3;
+  }
+  
+  button {
+    background-color: #00ffa3;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f2027;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #00cc7a;
+    box-shadow: 0 0 15px #00cc7a;
+  }
+  
+  a {
+    color: #00ffa3;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  .material-symbols-rounded, .material-icons {
+    font-size: 22px;
+    vertical-align: middle;
+    color: #00ffa3;
+    margin-right: 6px;
+  }
+  
+  ul.menu, ul.navigation-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  ul.menu li a, ul.navigation-links li a, a.button-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border: 1px solid #00ffa3;
+    border-radius: 10px;
+    color: #00ffa3;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  ul.menu li a:hover, ul.navigation-links li a:hover, a.button-link:hover {
+    background-color: #00ffa3;
+    color: #0f2027;
+  }
+  
+  .message {
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  
+  .success {
+    color: #00ffa3;
+  }
+  
+  .error {
+    color: #ff4f4f;
+  }
+  
+  .result-message {
+    background-color: rgba(0, 255, 163, 0.15);
+    color: #00ffa3;
+    box-shadow: 0 0 10px #00ffa3;
+  }
+  
+  .error-message {
+    background-color: rgba(255, 50, 50, 0.15);
+    color: #ff3232;
+    box-shadow: 0 0 10px #ff3232;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .container {
+      padding: 30px;
+      max-width: 90%;
+    }
+  
+    h1, h2 {
+      font-size: 1.8rem;
+    }
+  
+    input, textarea, button {
+      font-size: 1rem;
+    }
+  }
+  
 ```
 ---
 

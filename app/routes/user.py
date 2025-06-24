@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, session, render_template_string
 from bleach import clean
 from app.utils.decorator_user import user_required
-from app.controllers.user_xml_paser_controller import handle_parser_info
+from app.controllers.user.xml_parser import handle_parser_info
 
 
 user_bp = Blueprint('user', __name__)

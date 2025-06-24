@@ -22,12 +22,14 @@ def create_app():
 
     # Đăng ký Blueprints
     from app.routes.admin import admin_bp
+    from app.routes.api import api_bp
     from app.routes.auth import auth_bp
     from app.routes.error_pages import error_pages_bp
     from app.routes.main import main_bp
     from app.routes.user import user_bp
 
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(error_pages_bp, url_prefix='/error_pages')
     app.register_blueprint(main_bp)

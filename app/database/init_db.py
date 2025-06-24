@@ -9,9 +9,9 @@ def initialize_database(database_path):
     connection = sqlite3.connect(database_path)
     curr = connection.cursor()
 
-    # Tạo bảng users
+    # Tạo bảng accounts
     curr.execute('''
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS accounts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
@@ -33,17 +33,17 @@ def initialize_database(database_path):
 
     # Insert người dùng
     curr.execute('''
-    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    INSERT OR IGNORE INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ("root", root_pass, "root@example.com", "Root", "User", "092316186", "coding.example.com", "1990-03-11", 1))
 
     curr.execute('''
-    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    INSERT OR IGNORE INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ("admin", admin_pass, "admin@example.com", "Admin", "User", "098285213", "labs.example.com", "1990-03-11", 1))
 
     curr.execute('''
-    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
+    INSERT OR IGNORE INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ("guest", guest_pass, "guest@example.com", "Guest", "User", "095358553", "example.com", "1990-03-11", 0))
 

@@ -19,7 +19,7 @@ def login():
         raw_password = clean(request.form.get('password', ''))
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT username, is_admin, password FROM users WHERE username = '" + username + "'")
+        cursor.execute("SELECT username, is_admin, password FROM accounts WHERE username = '" + username + "'")
         row = cursor.fetchone()
         conn.close()
         
@@ -60,7 +60,7 @@ def register():
             cursor = conn.cursor()
             
             # Check if username already exists
-            cursor.execute("SELECT * FROM users WHERE username = '" + username + "'")
+            cursor.execute("SELECT * FROM accounts WHERE username = '" + username + "'")
             existing_user = cursor.fetchone()
             
             if existing_user:
@@ -69,7 +69,7 @@ def register():
             
             # Add new user to database
             cursor.execute('''
-                INSERT INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date)
+                INSERT INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (username, hased_password, email, first_name, last_name, number_phone, website_company, birth_date))
 
@@ -99,13 +99,13 @@ def reset_password():
             return render_template('auth/reset_password.html', Notification=Notification)
         
         conn = get_db_connection()
-        user = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        account = conn.execute("SELECT id FROM accounts WHERE email = ?", (email,)).fetchone()
         conn.close()
         
-        if user:
-            user_id = user['id']
+        if account:
+            account_id = account['id']
             serializer = get_token_serializer()
-            token = serializer.dumps({'user_id': user_id})
+            token = serializer.dumps({'account_id': account_id})
             reset_url = url_for('perform_password_reset', token=token, _external=True)
             
             send_reset_email(email, reset_url)
@@ -131,7 +131,7 @@ def perform_password_reset(token):
 
     try:
         data = serializer.loads(token, max_age=3600)
-        user_id = data.get('user_id')
+        account_id = data.get('account_id')
 
     except SignatureExpired:
         Notification = 'The reset link has expired. Please request a new one'
@@ -152,7 +152,7 @@ def perform_password_reset(token):
         conn = get_db_connection()
 
         conn.execute(
-            'UPDATE users SET password = ? WHERE id = ?', (hashed_password, user_id)
+            'UPDATE accounts SET password = ? WHERE id = ?', (hashed_password, account_id)
         )
 
         conn.commit()

@@ -38,7 +38,7 @@ docker-compose up -d && docker-compose build
 sh clean_docker_not_using.sh && docker-compose build && docker-compose up -d
 ```
 
-### Note 2: Because updating code into README.md is quite time consuming, I made a tool to update all the code into it, and just click run. It will automatically create README.md synthesizing all the code in the folder.
+### Note 2: Since updating code into README.md is quite time consuming, I created a tool to update all code into it and just click run. It will automatically generate README.md summarizing all code in the folder.
 ```bash
 python.exe ./create_readme_md.py or python3 ./create_readme_md.py
 ```

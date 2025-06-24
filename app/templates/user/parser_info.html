@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="container">
+  <div class="card">
     <h1>Submit XML Info</h1>
     <form method="POST" novalidate>
       <textarea id="xmlInput" name="xml_data"></textarea>
@@ -33,6 +33,9 @@
     {% if error %}
       <div class="message error">{{ error }}</div>
     {% endif %}
+    <footer>
+      &copy; 2025 TheWindGhost
+    </footer>
   </div>
 </body>
 </html>

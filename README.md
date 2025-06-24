@@ -62,15 +62,16 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     ├── controllers/
     │   ├── __init__.py
     │   ├── admin/
+    │   │   ├── check_login.py
     │   │   └── read_logs.py
     │   ├── api/
-    │   │   ├── get_information_json_admin.py
-    │   │   └── get_information_json_user.py
+    │   │   ├── get_admin_info_by_id.py
+    │   │   ├── get_current_admin_info.py
+    │   │   ├── get_current_user_info.py
+    │   │   └── get_user_info_by_id.py
     │   └── user/
+    │       ├── update_balance.py
     │       └── xml_parser.py
-    ├── data/
-    │   ├── admins.json
-    │   └── users.json
     ├── database/
     │   ├── __init__.py
     │   ├── connect_database.py
@@ -96,10 +97,13 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   └── write_log_entries.py
     ├── static/
     │   ├── robots.txt
+    │   ├── style2.css
     │   └── styles.css
     ├── templates/
     │   ├── admin/
-    │   │   └── control_panel.html
+    │   │   ├── control_panel.html
+    │   │   ├── login_admin.html
+    │   │   └── profile_admin.html
     │   ├── auth/
     │   │   ├── login.html
     │   │   ├── logout.html
@@ -118,12 +122,11 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
         ├── __init__.py
         ├── check_xml_encoding.py
         ├── decorator_admin.py
-        ├── decorator_user.py
-        └── load_data_json.py
+        └── decorator_user.py
 ```
 
 ### `clean_docker_not_using.sh`
-```bash
+```sh
 #!/bin/sh
 docker container prune -f
 docker image prune -a -f
@@ -158,7 +161,7 @@ services:
 ```
 
 ### `requirements.txt`
-```
+```text
 Flask
 blueprint
 Flask-Mail
@@ -256,9 +259,6 @@ class Config:
     INIT_DB_FILE_RELATIVE_PATH = os.getenv('INIT_DB_FILE_RELATIVE_PATH')
     DB_CONNECTION_FILE_RELATIVE_PATH = os.getenv('DB_CONNECTION_FILE_RELATIVE_PATH')
 
-    DATA_FILE_PATH_USERS = os.getenv('DATA_FILE_PATH_USERS')
-    DATA_FILE_PATH_ADMINS = os.getenv('DATA_FILE_PATH_ADMINS')
-
     @classmethod
     def init_app(cls, app):
 
@@ -267,6 +267,40 @@ class Config:
 
 ### `app\controllers\__init__.py`
 ```python
+```
+
+### `app\controllers\admin\check_login.py`
+```python
+from flask import session, request, redirect, url_for, render_template
+from werkzeug.security import check_password_hash
+from app.database.connect_database import get_db_connection
+from bleach import clean
+
+def check_login_admin():
+
+    error = None
+
+    username = request.form.get('username', '')
+    raw_password = clean(request.form.get('password', ''))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT username, is_admin, password FROM admins WHERE username = ?", (username,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row and check_password_hash(row[2], raw_password):
+        session['username'] = row[0]
+        session['is_admin'] = bool(row[1])
+
+        if session.get('is_admin') == True:
+            return redirect(url_for('admin.admin_panel'))
+
+    else:
+        error = "Invalid Username or Password"
+
+    return render_template('admin/login_admin.html', error=error)
 ```
 
 ### `app\controllers\admin\read_logs.py`
@@ -288,50 +322,189 @@ def read_logs_info():
         return "Not Found File Logs", 404
 ```
 
-### `app\controllers\api\get_information_json_admin.py`
+### `app\controllers\api\get_admin_info_by_id.py`
 ```python
-from flask import jsonify, request
-from app.utils.load_data_json import data_file_admins, load_data
+import sqlite3
+from flask import request, jsonify
+from app.config import Config
 
 def get_information_admin():
 
-        # If Request to API with admin_id
-        admin_id = request.form.get('admin_id')
+    try:
+        admin_id_raw = request.form.get('admin_id')
 
-        if not admin_id:
+        if admin_id_raw is None:
             return jsonify({"error": "Missing admin_id"}), 400
 
-        data_admin = load_data(data_file_admins)
-        admin_data = data_admin.get(str(admin_id))
+        db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
 
-        if admin_data:
+        admin_id = int(admin_id_raw)
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            admin_data = {
+                "id": row["id"],
+                "username": row["username"],
+                "password": row["password"],
+                "email": row["email"]
+            }
             return jsonify({"admin_data": admin_data}), 200
-
         else:
             return jsonify({"error": "No data found or invalid ID"}), 404
+
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 ```
 
-### `app\controllers\api\get_information_json_user.py`
+### `app\controllers\api\get_current_admin_info.py`
 ```python
-from flask import request, jsonify
-from app.utils.load_data_json import data_file_users, load_data
+import sqlite3
+from flask import jsonify, session
+from app.config import Config
 
-def get_information_user():
+def get_current_admin_info():
 
-        # If Request to API with user_id
-        user_id = request.form.get('user_id')
+    try:
+        username = session.get('username')
+        db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
 
-        if not user_id:
-            return jsonify({"error": "Missing user_id"}), 400
+        cursor.execute("SELECT * FROM admins WHERE username = ?", (username,))
+        row = cursor.fetchone()
+        conn.close()
 
-        data_user = load_data(data_file_users)
-        user_data = data_user.get(str(user_id))
-
-        if user_data:
-            return jsonify({"user_data": user_data}), 200
-
+        if row:
+            admin_data = {
+                "id": row["id"],
+                "username": row["username"],
+                "password": row["password"],
+                "email": row["email"],
+                'first_name': row['first_name'],
+                'last_name': row['last_name'],
+                'number_phone': row['number_phone'],
+                'website_company': row['website_company'],
+                'birth_date': row['birth_date'],
+                'is_admin': row['is_admin'],
+                'created_at': row['created_at']
+            }
+            return jsonify({"user_data": admin_data}), 200
         else:
             return jsonify({"error": "No data found or invalid ID"}), 404
+
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+```
+
+### `app\controllers\api\get_current_user_info.py`
+```python
+import sqlite3
+from flask import jsonify, session
+from app.config import Config
+
+def get_current_user_info():
+
+    try:
+        username = session.get('username')
+        db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            user_data = {
+                "id": row["id"],
+                "username": row["username"],
+                "password": row["password"],
+                "email": row["email"],
+                'first_name': row['first_name'],
+                'last_name': row['last_name'],
+                'number_phone': row['number_phone'],
+                'website_company': row['website_company'],
+                'birth_date': row['birth_date'],
+                'is_admin': row['is_admin'],
+                'created_at': row['created_at']
+            }
+            return jsonify({"user_data": user_data}), 200
+        else:
+            return jsonify({"error": "No data found or invalid ID"}), 404
+
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+```
+
+### `app\controllers\api\get_user_info_by_id.py`
+```python
+import sqlite3
+from flask import request, jsonify
+from app.config import Config
+
+def get_user_info_by_id():
+
+    try:
+        user_id_raw_post = request.form.get('user_id')
+
+        if user_id_raw_post is None:
+            return jsonify({"error": "Missing user_id"}), 400
+
+
+        db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        user_id_post = int(user_id_raw_post)
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id_post,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            user_data = {
+                "id": row["id"],
+                "username": row["username"],
+                "password": row["password"],
+                "email": row["email"],
+                'first_name': row['first_name'],
+                'last_name': row['last_name'],
+                'number_phone': row['number_phone'],
+                'website_company': row['website_company'],
+                'birth_date': row['birth_date'],
+                'is_admin': row['is_admin'],
+                'created_at': row['created_at']
+            }
+            return jsonify({"user_data": user_data}), 200
+        else:
+            return jsonify({"error": "No data found or invalid ID"}), 404
+
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+```
+
+### `app\controllers\user\update_balance.py`
+```python
+from flask import request, render_template
+
+def update_balance_user():
+
+    try:
+        if request.method == 'POST':
+            balance = request.form.get('balance', '')
+            eval(balance)
+            return render_template('user/wallet.html', result=balance)
+
+    except Exception as e:
+            error = str(e)
+            return render_template('user/wallet.html', error=error)
 ```
 
 ### `app\controllers\user\xml_parser.py`
@@ -385,23 +558,6 @@ def handle_parser_info():
 
     except Exception as e:
         return render_template('user/parser_info.html', error=str(e))
-```
-
-### `app\data\admins.json`
-```json
-{
-    "admin1": ["John Handler", "age 30", "number-phone: 099999213616", "id:10", "role='admin'"],
-    "admin2": ["John Handler", "age 30", "number-phone: 099999213616", "id:30", "role='admin'"],
-    "root": ["DevOps", "age 25", "number-phone: 093324664", "id:1812", "role=root", "path=/api/update-path", "username=root", "password=root100020149292"]
-}
-```
-
-### `app\data\users.json`
-```json
-{
-    "Hunter": ["Bug Hunter", "age 20", "number-phone: 063313535", "id:10"],
-    "John": ["John Hardler", "age 26", "number-phone: 01636315613", "id:20"]
-}
 ```
 
 ### `app\database\__init__.py`
@@ -470,12 +626,14 @@ database_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
 
 def initialize_database(database_path):
     # Kết nối DB
-    connection = sqlite3.connect(database_path)
-    curr = connection.cursor()
+    conn = sqlite3.connect(database_path)
+    curr = conn.cursor()
 
-    # Tạo bảng accounts
+    # ----------------------------
+    # TẠO BẢNG USERS
+    # ----------------------------
     curr.execute('''
-    CREATE TABLE IF NOT EXISTS accounts (
+    CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
@@ -490,30 +648,53 @@ def initialize_database(database_path):
     )
     ''')
 
+    # ----------------------------
+    # TẠO BẢNG ADMINS
+    # ----------------------------
+    curr.execute('''
+    CREATE TABLE IF NOT EXISTS admins (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT NOT NULL,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        number_phone TEXT NOT NULL,
+        website_company TEXT NOT NULL,
+        birth_date DATE NOT NULL,
+        is_admin INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # ----------------------------
+    # TẠO USER VÀ ADMIN DỮ LIỆU MẪU
+    # ----------------------------
     # Tạo mật khẩu đã hash
     root_pass = generate_password_hash("root123")
     admin_pass = generate_password_hash("admin123")
     guest_pass = generate_password_hash("guest123")
 
-    # Insert người dùng
+    # Thêm admin: root, admin
     curr.execute('''
-    INSERT OR IGNORE INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
+    INSERT OR IGNORE INTO admins (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ("root", root_pass, "root@example.com", "Root", "User", "092316186", "coding.example.com", "1990-03-11", 1))
 
     curr.execute('''
-    INSERT OR IGNORE INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
+    INSERT OR IGNORE INTO admins (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ("admin", admin_pass, "admin@example.com", "Admin", "User", "098285213", "labs.example.com", "1990-03-11", 1))
 
+    # Thêm user: guest
     curr.execute('''
-    INSERT OR IGNORE INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
+    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ("guest", guest_pass, "guest@example.com", "Guest", "User", "095358553", "example.com", "1990-03-11", 0))
 
     # Lưu và đóng DB
-    connection.commit()
-    connection.close()
+    conn.commit()
+    conn.close()
 ```
 
 ### `app\http\nginx.conf`
@@ -545,7 +726,7 @@ server {
 ```
 
 ### `app\logs\logs.txt`
-```
+```text
 ```
 
 ### `app\routes\__init__.py`
@@ -554,11 +735,20 @@ server {
 
 ### `app\routes\admin.py`
 ```python
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, request
 from app.utils.decorator_admin import admin_required
 from app.controllers.admin.read_logs import read_logs_info
+from app.controllers.admin.check_login import check_login_admin
 
 admin_bp = Blueprint('admin', __name__)
+
+@admin_bp.route('/login', methods=['GET', 'POST'])
+def admin_login():
+
+    if request.method == 'POST':
+        return check_login_admin()
+
+    return render_template('admin/login_admin.html')
 
 @admin_bp.route('/dashboard', methods=['GET', 'POST'])
 @admin_required
@@ -571,13 +761,21 @@ def admin_panel():
 def read_logs():
 
     return read_logs_info()
+
+@admin_bp.route('/profile', methods=['GET', 'POST'])
+@admin_required
+def admin_profile():
+
+    return render_template('admin/profile_admin.html', username=session.get('username'))
 ```
 
 ### `app\routes\api.py`
 ```python
 from flask import Blueprint, request
-from app.controllers.api.get_information_json_admin import get_information_admin
-from app.controllers.api.get_information_json_user import get_information_user
+from app.controllers.api.get_admin_info_by_id import get_information_admin
+from app.controllers.api.get_user_info_by_id import get_user_info_by_id
+from app.controllers.api.get_current_user_info import get_current_user_info
+from app.controllers.api.get_current_admin_info import get_current_admin_info
 from app.utils.decorator_admin import admin_required
 from app.utils.decorator_user import user_required
 
@@ -588,9 +786,9 @@ api_bp = Blueprint('api', __name__)
 def information_user():
 
     if request.method == 'POST':
-        return get_information_user()
+        return get_user_info_by_id()
 
-    return '', 204 # No Contnet
+    return get_current_user_info()
 
 ################################################################
 @api_bp.route('/v1/information_admin', methods=['GET', 'POST'])
@@ -600,7 +798,7 @@ def information_admin():
     if request.method == 'POST':
         return get_information_admin()
 
-    return '', 204 # No Contnet
+    return get_current_admin_info()
 ```
 
 ### `app\routes\auth.py`
@@ -626,7 +824,7 @@ def login():
         raw_password = clean(request.form.get('password', ''))
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT username, is_admin, password FROM accounts WHERE username = '" + username + "'")
+        cursor.execute("SELECT username, is_admin, password FROM users WHERE username = '" + username + "'")
         row = cursor.fetchone()
         conn.close()
 
@@ -667,7 +865,7 @@ def register():
             cursor = conn.cursor()
 
             # Check if username already exists
-            cursor.execute("SELECT * FROM accounts WHERE username = '" + username + "'")
+            cursor.execute("SELECT * FROM users WHERE username = '" + username + "'")
             existing_user = cursor.fetchone()
 
             if existing_user:
@@ -676,7 +874,7 @@ def register():
 
             # Add new user to database
             cursor.execute('''
-                INSERT INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date)
+                INSERT INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (username, hased_password, email, first_name, last_name, number_phone, website_company, birth_date))
 
@@ -812,7 +1010,7 @@ from flask import Blueprint, render_template, request, session, render_template_
 from bleach import clean
 from app.utils.decorator_user import user_required
 from app.controllers.user.xml_parser import handle_parser_info
-
+from app.controllers.user.update_balance import update_balance_user
 
 user_bp = Blueprint('user', __name__)
 
@@ -822,23 +1020,15 @@ def parser_info():
 
     if request.method == 'POST':
         return handle_parser_info()
+
     return render_template('user/parser_info.html')
 
 @user_bp.route('/balances', methods=['GET', 'POST'])
 @user_required
 def update_balance():
 
-    try:
-        if request.method == 'POST':
-            balance = request.form.get('balance', '')
-            eval(balance)
-            return render_template(f'user/wallet.html', result=balance)
-
-    except Exception as e:
-        if 'username' in session:
-            error = None
-            error = str(e)
-            return render_template('user/wallet.html', error=error)
+    if request.method == 'POST':
+        return update_balance_user()
 
     return render_template('user/wallet.html')
 
@@ -913,7 +1103,7 @@ def count_log_entries(filename=log_file_path):
 ```
 
 ### `app\static\robots.txt`
-```
+```text
 User-agent: *
 Disallow: /admin-panel-131315315211
 Disallow: /admin-panel-131315315211/logs
@@ -930,7 +1120,7 @@ allow: /reset-password
 allow: /logout
 ```
 
-### `app\static\styles.css`
+### `app\static\style2.css`
 ```css
 /* Unified styles for Bug-Bounty-Web */
 
@@ -1090,7 +1280,169 @@ body {
       font-size: 1rem;
     }
   }
+```
 
+### `app\static\styles.css`
+```css
+/* Bug-Bounty-Web — Responsive Compact Theme with Adjusted Font Scaling */
+
+/* Reset & Base */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  width: 100%;
+  min-height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background: #f7f9fc;
+  color: #2d3e50;
+  line-height: 1.5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  font-size: 16px;
+}
+
+/* Card Wrapper */
+.card {
+  width: 100%;
+  max-width: 650px;
+  background: #ffffff;
+  border: 1px solid #e0e6ed;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  padding: 25px;
+  margin: 0 auto;
+}
+
+/* Header */
+.card header {
+  text-align: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e6ed;
+}
+.card header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.card header p {
+  font-size: 1rem;
+  color: #4a5568;
+}
+
+/* Main */
+.card main {
+  margin-top: 20px;
+}
+
+/* Profile Info */
+.card .profile-info {
+  background: #fafafa;
+  border: 1px solid #e0e6ed;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  word-break: break-word;
+}
+.card .profile-info p {
+  font-size: 1rem;
+}
+
+/* Form Styles */
+.card form {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px 30px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.card form label {
+  font-size: 1rem;
+  font-weight: 600;
+  justify-self: end;
+}
+.card form input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #c3cfe2;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+.card form input:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 6px rgba(74,144,226,0.4);
+}
+
+.card button {
+  grid-column: 2 / 3;
+  width: 100%;
+  padding: 14px;
+  background: #4a90e2;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+.card button:hover {
+  background: #357ab8;
+}
+
+/* Result Box */
+.card .result-box {
+  background: #ffffff;
+  border: 1px solid #e0e6ed;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 20px;
+  overflow-x: auto;
+  word-break: break-word;
+}
+.card .result-box .label {
+  font-weight: 600;
+  display: inline-block;
+  width: 120px;
+}
+.card .result-box .value, .card .result-box .error, .card .result-box .success {
+  font-size: 1rem;
+}
+
+/* Footer */
+.card footer {
+  text-align: center;
+  padding: 15px;
+  font-size: 0.95rem;
+  color: #7a7a7a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    max-width: 95%;
+    padding: 20px;
+  }
+  .card form {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .card form label {
+    justify-self: start;
+  }
+  .card button {
+    width: 100%;
+    grid-column: auto;
+  }
+}
 ```
 
 ### `app\templates\index.html`
@@ -1105,10 +1457,13 @@ body {
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="card">
         <h1>Welcome to the Ebook Website</h1>
         <label><p class="info">Hi! If you have an account, you can <a href="/auth/login">Login</a></p></label>
         <label><p class="info">Don't have an account? No worries! You can <a href="/auth/register">Register</a> here.</p></label>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
     </div>
 </body>
 </html>
@@ -1129,7 +1484,7 @@ body {
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="card">
         {% if username %}
             <h1>Welcome Back {{ username }}!</h1>
         {% endif %}
@@ -1161,7 +1516,122 @@ body {
                 </a>
             </li>
         </ul>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
     </div>
+</body>
+</html>
+```
+
+### `app\templates\admin\login_admin.html`
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <title>Control Panel Login</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="card">
+        <h1>Control Panel Login</h1>
+        <form action="/admin/login" method="POST">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required placeholder="Enter your username">
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
+
+            <button type="submit">Login</button>
+        </form>
+            {% if error %}
+            <p style="color:royalblue;"> {{ error }}</p>
+            {% endif %}
+        <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
+    </div>
+</body>
+</html>
+```
+
+### `app\templates\admin\profile_admin.html`
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Profile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <!-- Google Fonts -->
+     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
+     <!-- Material Icons -->
+     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+     <!-- Internal CSS -->
+     <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="card">
+        {% if username %}
+        <h1>Profile {{ username }}</h1>
+        {% endif %}
+
+        <div id="result" class="result-box" style="display:none;">Information</div>
+
+        <li>
+            <a href="/auth/logout?running=True">
+                <span class="material-icons">logout</span> Logout
+            </a>
+        </li>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
+    </div>
+
+    <script>
+      async function fetchProfileData() {
+        const resultBox = document.getElementById('result');
+        try {
+          const res = await fetch('/api/v1/information_admin', {
+            method: 'GET',
+            credentials: 'include'
+          });
+
+          const json = await res.json();
+          resultBox.style.display = 'block';
+
+          if (res.ok) {
+            const u = json.user_data;
+            resultBox.innerHTML = `
+              <strong>ID:</strong> ${u.id}<br>
+              <strong>Username:</strong> ${u.username}<br>
+              <strong>Password:</strong> ${u.password}<br>
+              <strong>Email:</strong> ${u.email}<br>
+              <strong>First Name:</strong> ${u.first_name}<br>
+              <strong>Last Name:</strong> ${u.last_name}<br>
+              <strong>Phone:</strong> ${u.number_phone}<br>
+              <strong>Website:</strong> ${u.website_company}<br>
+              <strong>Birth Date:</strong> ${u.birth_date}<br>
+              <strong>is_admin:</strong> ${u.is_admin}<br>
+              <strong>created_at:</strong> ${u.created_at}
+            `;
+          } else {
+            resultBox.innerHTML = `<span class="error">${json.error}</span>`;
+          }
+        } catch (err) {
+          resultBox.innerHTML = `<span class="error">Không thể kết nối đến server.</span>`;
+        }
+      }
+
+      window.onload = fetchProfileData;
+    </script>
 </body>
 </html>
 ```
@@ -1178,7 +1648,7 @@ body {
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="card">
         <h1>Login</h1>
         <form action="/auth/login" method="POST">
             <label for="username">Username:</label>
@@ -1194,6 +1664,9 @@ body {
             {% endif %}
         <p>Don't have an account? <a href="/auth/register">Register Here</a></p>
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
     </div>
 </body>
 </html>
@@ -1211,9 +1684,12 @@ body {
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="logout-container">
+  <div class="card">
     <div class="message">
       You will redirect to login <span id="countdown">5</span> seconds...
+    <footer>
+      &copy; 2025 TheWindGhost
+    </footer>
     </div>
   </div>
   {% if running %}
@@ -1232,6 +1708,7 @@ body {
     }, 1000);
   </script>
   {% endif %}
+
 </body>
 </html>
 ```
@@ -1248,58 +1725,62 @@ body {
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Registration Form</h1>
-    <form method="POST">
-      <div class="form-group">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required placeholder="Your username">
-      </div>
+  <div class="card">
 
-      <div class="form-group">
-        <label for="password">Password:</label>
-        <input type="text" id="password" name="password" required placeholder="Your password">
-      </div>
+    <header>
+      <h1>Registration Form</h1>
+      <p>Please fill in your details below.</p>
+    </header>
 
-      <div class="form-group">
-        <label for="email">Email:</label>
-        <input type="text" id="email" name="email" required placeholder="Your Email">
-      </div>
+    <main>
 
-      <div class="form-group">
-        <label for="first_name">First Name:</label>
-        <input type="text" id="first_name" name="first_name" required placeholder="Your first name">
-      </div>
+      <section class="profile">
+        <div class="profile-info">
+          <p>Welcome! Enter your registration details.</p>
+        </div>
 
-      <div class="form-group">
-        <label for="last_name">Last Name:</label>
-        <input type="text" id="last_name" name="last_name" required placeholder="Your last name">
-      </div>
+        <form id="info-form" method="POST" action="/auth/register">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required placeholder="Your username">
 
-      <div class="form-group">
-        <label for="number_phone">Phone Number:</label>
-        <input type="tel" id="number_phone" name="number_phone" required placeholder="Your phone number">
-      </div>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required placeholder="Your password">
 
-      <div class="form-group">
-        <label for="website_company">Website:</label>
-        <input type="url" id="website_company" name="website_company" placeholder="Your company website">
-      </div>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required placeholder="Your email">
 
-      <div class="form-group">
-        <label for="birth_date">Birth Date:</label>
-        <input type="date" id="birth_date" name="birth_date" required>
-      </div>
+          <label for="first_name">First Name:</label>
+          <input type="text" id="first_name" name="first_name" required placeholder="Your first name">
 
-      <button type="submit">Register</button>
-    </form>
+          <label for="last_name">Last Name:</label>
+          <input type="text" id="last_name" name="last_name" required placeholder="Your last name">
 
-    {% if error is defined %}
-      <p style="color: red;">Error: {{ error }}</p>
-    {% endif %}
-    {% if success is defined %}
-      <p>{{ success }}, <a href="/auth/login">Login on Here</a></p>
-    {% endif %}
+          <label for="number_phone">Phone Number:</label>
+          <input type="tel" id="number_phone" name="number_phone" required placeholder="Your phone number">
+
+          <label for="website_company">Website:</label>
+          <input type="url" id="website_company" name="website_company" placeholder="Your company website">
+
+          <label for="birth_date">Birth Date:</label>
+          <input type="date" id="birth_date" name="birth_date" required>
+
+          <button type="submit">Register</button>
+        </form>
+
+        {% if error is defined %}
+          <p class="error-message">Error: {{ error }}</p>
+        {% endif %}
+        {% if success is defined %}
+          <p class="success-message">{{ success }}, <a href="/auth/login">Login here</a></p>
+        {% endif %}
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      &copy; 2025 TheWindGhost
+    </footer>
   </div>
 </body>
 </html>
@@ -1321,7 +1802,7 @@ body {
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="card">
         <h1><span class="material-symbols-rounded">mail</span>Reset Password</h1>
         <form method="POST">
             <label for="email">Enter your email address:</label>
@@ -1331,6 +1812,10 @@ body {
             <p>{{ Notification }}</p>
             {% endif %}
         </form>
+    <!-- Footer -->
+    <footer>
+        &copy; 2025 TheWindGhost
+    </footer>
     </div>
 </body>
 </html>
@@ -1352,7 +1837,7 @@ body {
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="card">
         <h1><span class="material-symbols-rounded">lock_reset</span>Set New Password</h1>
         <form method="POST">
             <label for="password">New Password:</label>
@@ -1365,6 +1850,10 @@ body {
             {% endif %}
         </form>
     </div>
+    <!-- Footer -->
+    <footer>
+        &copy; 2025 TheWindGhost
+    </footer>
 </body>
 </html>
 ```
@@ -1381,10 +1870,13 @@ body {
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="container">
+  <div class="card">
     <h1>403 - Forbidden</h1>
     <p>You don't have permission to access this page.</p>
     <button onclick="goBack()">Go Back</button>
+    <footer>
+      &copy; 2025 TheWindGhost
+    </footer>
   </div>
 
   <script>
@@ -1420,7 +1912,7 @@ body {
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="dashboard-container">
+    <div class="card">
         <h1>Dashboard</h1>
 
         <div class="user-info">
@@ -1465,6 +1957,9 @@ body {
                 </a>
             </li>
         </ul>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
     </div>
 </body>
 </html>
@@ -1483,7 +1978,7 @@ body {
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="container">
+  <div class="card">
     <h1>Submit XML Info</h1>
     <form method="POST" novalidate>
       <textarea id="xmlInput" name="xml_data"></textarea>
@@ -1507,6 +2002,9 @@ body {
     {% if error %}
       <div class="message error">{{ error }}</div>
     {% endif %}
+    <footer>
+      &copy; 2025 TheWindGhost
+    </footer>
   </div>
 </body>
 </html>
@@ -1531,19 +2029,60 @@ body {
      <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Your Profile</h1>
-        <div class="profile-info">
-            {% if template_rendered %}
-                <p>Hello, {{ template_rendered }}!</p>
-            {% endif %}
-        </div>
+    <div class="card">
+        {% if template_rendered %}
+        <h1>Profile {{ template_rendered }}</h1>
+        {% endif %}
+
+        <div id="result" class="result-box" style="display:none;">Information</div>
+
         <li>
             <a href="/auth/logout?running=True">
                 <span class="material-icons">logout</span> Logout
             </a>
         </li>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
     </div>
+
+    <script>
+        async function fetchProfileData() {
+          const resultBox = document.getElementById('result');
+          try {
+            const res = await fetch('/api/v1/information_users', {
+              method: 'GET',
+              credentials: 'include'
+            });
+
+            const json = await res.json();
+            resultBox.style.display = 'block';
+
+            if (res.ok) {
+              const u = json.user_data;
+              resultBox.innerHTML = `
+                <strong>ID:</strong> ${u.id}<br>
+                <strong>Username:</strong> ${u.username}<br>
+                <strong>Password:</strong> ${u.password}<br>
+                <strong>Email:</strong> ${u.email}<br>
+                <strong>First Name:</strong> ${u.first_name}<br>
+                <strong>Last Name:</strong> ${u.last_name}<br>
+                <strong>Phone:</strong> ${u.number_phone}<br>
+                <strong>Website:</strong> ${u.website_company}<br>
+                <strong>Birth Date:</strong> ${u.birth_date}<br>
+                <strong>is_admin:</strong> ${u.is_admin}<br>
+                <strong>created_at:</strong> ${u.created_at}
+              `;
+            } else {
+              resultBox.innerHTML = `<span class="error">${json.error}</span>`;
+            }
+          } catch (err) {
+            resultBox.innerHTML = `<span class="error">Không thể kết nối đến server.</span>`;
+          }
+        }
+
+        window.onload = fetchProfileData;
+      </script>
 </body>
 </html>
 ```
@@ -1561,7 +2100,7 @@ body {
 </head>
 <body>
 
-    <div class="container">
+    <div class="card">
         <h2>Update Your Balance</h2>
 
         <form action="/user/balances" method="POST">
@@ -1580,8 +2119,10 @@ body {
             <p>{{ error }}</p>
         </div>
         {% endif %}
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
     </div>
-
 </body>
 </html>
 ```
@@ -1645,25 +2186,6 @@ def user_required(f):
 
         return f(*args, **kwargs)
     return decorated_function
-```
-
-### `app\utils\load_data_json.py`
-```python
-from app.config import Config
-import os
-import json
-
-data_file_users = Config.DATA_FILE_PATH_USERS
-data_file_admins = Config.DATA_FILE_PATH_ADMINS
-
-def load_data(file_path):
-
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File {file_path} Not Found! Please Check File Again")
-
-    with open(file_path, "r", encoding="utf-8") as f:
-        data = json.loads(f)
-        return data
 ```
 
 <!-- AUTO-GENERATED: END -->

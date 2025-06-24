@@ -8,9 +8,12 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="logout-container">
+  <div class="card">
     <div class="message">
       You will redirect to login <span id="countdown">5</span> seconds...
+    <footer>
+      &copy; 2025 TheWindGhost
+    </footer>
     </div>
   </div>
   {% if running %}
@@ -29,5 +32,6 @@
     }, 1000);
   </script>
   {% endif %}
+
 </body>
 </html>

@@ -8,58 +8,62 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Registration Form</h1>
-    <form method="POST">
-      <div class="form-group">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required placeholder="Your username">
-      </div>
+  <div class="card">
 
-      <div class="form-group">
-        <label for="password">Password:</label>
-        <input type="text" id="password" name="password" required placeholder="Your password">
-      </div>
+    <header>
+      <h1>Registration Form</h1>
+      <p>Please fill in your details below.</p>
+    </header>
 
-      <div class="form-group">
-        <label for="email">Email:</label>
-        <input type="text" id="email" name="email" required placeholder="Your Email">
-      </div>
+    <main>
 
-      <div class="form-group">
-        <label for="first_name">First Name:</label>
-        <input type="text" id="first_name" name="first_name" required placeholder="Your first name">
-      </div>
+      <section class="profile">
+        <div class="profile-info">
+          <p>Welcome! Enter your registration details.</p>
+        </div>
 
-      <div class="form-group">
-        <label for="last_name">Last Name:</label>
-        <input type="text" id="last_name" name="last_name" required placeholder="Your last name">
-      </div>
+        <form id="info-form" method="POST" action="/auth/register">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required placeholder="Your username">
 
-      <div class="form-group">
-        <label for="number_phone">Phone Number:</label>
-        <input type="tel" id="number_phone" name="number_phone" required placeholder="Your phone number">
-      </div>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required placeholder="Your password">
 
-      <div class="form-group">
-        <label for="website_company">Website:</label>
-        <input type="url" id="website_company" name="website_company" placeholder="Your company website">
-      </div>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required placeholder="Your email">
 
-      <div class="form-group">
-        <label for="birth_date">Birth Date:</label>
-        <input type="date" id="birth_date" name="birth_date" required>
-      </div>
+          <label for="first_name">First Name:</label>
+          <input type="text" id="first_name" name="first_name" required placeholder="Your first name">
 
-      <button type="submit">Register</button>
-    </form>
+          <label for="last_name">Last Name:</label>
+          <input type="text" id="last_name" name="last_name" required placeholder="Your last name">
 
-    {% if error is defined %}
-      <p style="color: red;">Error: {{ error }}</p>
-    {% endif %}
-    {% if success is defined %}
-      <p>{{ success }}, <a href="/auth/login">Login on Here</a></p>
-    {% endif %}
+          <label for="number_phone">Phone Number:</label>
+          <input type="tel" id="number_phone" name="number_phone" required placeholder="Your phone number">
+
+          <label for="website_company">Website:</label>
+          <input type="url" id="website_company" name="website_company" placeholder="Your company website">
+
+          <label for="birth_date">Birth Date:</label>
+          <input type="date" id="birth_date" name="birth_date" required>
+
+          <button type="submit">Register</button>
+        </form>
+
+        {% if error is defined %}
+          <p class="error-message">Error: {{ error }}</p>
+        {% endif %}
+        {% if success is defined %}
+          <p class="success-message">{{ success }}, <a href="/auth/login">Login here</a></p>
+        {% endif %}
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      &copy; 2025 TheWindGhost
+    </footer>
   </div>
 </body>
 </html>

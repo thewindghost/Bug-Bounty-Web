@@ -58,11 +58,11 @@ LANG_MAP = {
     '.html': 'html',
     '.css': 'css',
     '.json': 'json',
-    '.txt': '',
+    '.txt': 'text',
     '.yml': 'yaml',
     '.yaml': 'yaml',
     '.md': 'markdown',
-    '.sh': 'bash',
+    '.sh': 'sh',
     '.conf': 'config'
 }
 

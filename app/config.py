@@ -19,9 +19,6 @@ class Config:
     LOG_FILE_RELATIVE_PATH = os.getenv('LOG_FILE_RELATIVE_PATH')
     INIT_DB_FILE_RELATIVE_PATH = os.getenv('INIT_DB_FILE_RELATIVE_PATH')
     DB_CONNECTION_FILE_RELATIVE_PATH = os.getenv('DB_CONNECTION_FILE_RELATIVE_PATH')
-
-    DATA_FILE_PATH_USERS = os.getenv('DATA_FILE_PATH_USERS')
-    DATA_FILE_PATH_ADMINS = os.getenv('DATA_FILE_PATH_ADMINS')
     
     @classmethod
     def init_app(cls, app):

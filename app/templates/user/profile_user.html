@@ -15,18 +15,59 @@
      <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Your Profile</h1>
-        <div class="profile-info">
-            {% if template_rendered %}
-                <p>Hello, {{ template_rendered }}!</p>
-            {% endif %}
-        </div>
+    <div class="card">
+        {% if template_rendered %}
+        <h1>Profile {{ template_rendered }}</h1>
+        {% endif %}
+
+        <div id="result" class="result-box" style="display:none;">Information</div>
+
         <li>
             <a href="/auth/logout?running=True">
                 <span class="material-icons">logout</span> Logout
             </a>
         </li>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
     </div>
+
+    <script>
+        async function fetchProfileData() {
+          const resultBox = document.getElementById('result');
+          try {
+            const res = await fetch('/api/v1/information_users', {
+              method: 'GET',
+              credentials: 'include'
+            });
+    
+            const json = await res.json();
+            resultBox.style.display = 'block';
+    
+            if (res.ok) {
+              const u = json.user_data;
+              resultBox.innerHTML = `
+                <strong>ID:</strong> ${u.id}<br>
+                <strong>Username:</strong> ${u.username}<br>
+                <strong>Password:</strong> ${u.password}<br>
+                <strong>Email:</strong> ${u.email}<br>
+                <strong>First Name:</strong> ${u.first_name}<br>
+                <strong>Last Name:</strong> ${u.last_name}<br>
+                <strong>Phone:</strong> ${u.number_phone}<br>
+                <strong>Website:</strong> ${u.website_company}<br>
+                <strong>Birth Date:</strong> ${u.birth_date}<br>
+                <strong>is_admin:</strong> ${u.is_admin}<br>
+                <strong>created_at:</strong> ${u.created_at}
+              `;
+            } else {
+              resultBox.innerHTML = `<span class="error">${json.error}</span>`;
+            }
+          } catch (err) {
+            resultBox.innerHTML = `<span class="error">Không thể kết nối đến server.</span>`;
+          }
+        }
+    
+        window.onload = fetchProfileData;
+      </script>
 </body>
 </html>

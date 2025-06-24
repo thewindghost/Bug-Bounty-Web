@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="card">
         <h1>Login</h1>
         <form action="/auth/login" method="POST">
             <label for="username">Username:</label>
@@ -24,6 +24,9 @@
             {% endif %}
         <p>Don't have an account? <a href="/auth/register">Register Here</a></p>
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+        <footer>
+            &copy; 2025 TheWindGhost
+        </footer>
     </div>
 </body>
 </html>

@@ -19,7 +19,7 @@ def login():
         raw_password = clean(request.form.get('password', ''))
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT username, is_admin, password FROM accounts WHERE username = '" + username + "'")
+        cursor.execute("SELECT username, is_admin, password FROM users WHERE username = '" + username + "'")
         row = cursor.fetchone()
         conn.close()
         
@@ -60,7 +60,7 @@ def register():
             cursor = conn.cursor()
             
             # Check if username already exists
-            cursor.execute("SELECT * FROM accounts WHERE username = '" + username + "'")
+            cursor.execute("SELECT * FROM users WHERE username = '" + username + "'")
             existing_user = cursor.fetchone()
             
             if existing_user:
@@ -69,7 +69,7 @@ def register():
             
             # Add new user to database
             cursor.execute('''
-                INSERT INTO accounts (username, password, email, first_name, last_name, number_phone, website_company, birth_date)
+                INSERT INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (username, hased_password, email, first_name, last_name, number_phone, website_company, birth_date))
 

@@ -35,7 +35,7 @@ docker-compose up -d && docker-compose build
 ```
 ---
 
-### Note: if you have updated the code from local and want docker container to have that code. Run the docker-compose build command again
+### Note 1: if you have updated the code from local and want docker container to have that code. Run the docker-compose build command again
 #### Warning: There is a tool to clean all unused docker containers and docker images, use with caution.
 ```bash
 sh clean_docker_not_using.sh && docker-compose build && docker-compose up -d

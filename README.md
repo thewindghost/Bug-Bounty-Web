@@ -155,7 +155,7 @@ services:
     expose:
       - 5505
     volumes:
-      - .:/bug_bounty_web:ro
+      - .:/bug_bounty_web
     depends_on:
       - nginx
 

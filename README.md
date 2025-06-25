@@ -65,13 +65,13 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   │   ├── check_login.py
     │   │   └── read_logs.py
     │   ├── api/
-    │   │   ├── get_admin_info_by_id.py
-    │   │   ├── get_current_admin_info.py
-    │   │   ├── get_current_user_info.py
-    │   │   └── get_user_info_by_id.py
+    │   │   ├── get_admin_info_by_post.py
+    │   │   ├── get_current_admin_info_id.py
+    │   │   ├── get_current_user_info_id.py
+    │   │   └── get_user_info_by_post.py
     │   └── user/
     │       ├── update_balance.py
-    │       └── xml_parser.py
+    │       └── update_setting.py
     ├── database/
     │   ├── __init__.py
     │   ├── connect_database.py
@@ -94,6 +94,7 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   ├── __init__.py
     │   ├── get_token.py
     │   ├── send_email.py
+    │   ├── update_user_profile.py
     │   └── write_log_entries.py
     ├── static/
     │   ├── robots.txt
@@ -103,6 +104,7 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   ├── admin/
     │   │   ├── control_panel.html
     │   │   ├── login_admin.html
+    │   │   ├── logs.html
     │   │   └── profile_admin.html
     │   ├── auth/
     │   │   ├── login.html
@@ -115,8 +117,8 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   ├── index.html
     │   └── user/
     │       ├── dashboard.html
-    │       ├── parser_info.html
     │       ├── profile_user.html
+    │       ├── setting_user.html
     │       └── wallet.html
     └── utils/
         ├── __init__.py
@@ -154,7 +156,7 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "443:443"
+    #  - "443:443"
     volumes:
       - ./app/http/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     # - ./app/http/ssl:/etc/nginx/ssl:ro
@@ -305,24 +307,29 @@ def check_login_admin():
 
 ### `app\controllers\admin\read_logs.py`
 ```python
-from flask import make_response
+from flask import render_template
 from app.config import Config
+import os
 
 
 def read_logs_info():
-
     try:
+        if not os.path.exists(Config.LOG_FILE_RELATIVE_PATH):
+            return "Not Found File Logs", 404
+
         with open(Config.LOG_FILE_RELATIVE_PATH, 'r') as f:
             log_data = f.read()
-        response= make_response(log_data)
-        response.headers['Content-Type'] = 'text/html'
-        return response
 
-    except FileNotFoundError:
-        return "Not Found File Logs", 404
+        entries = log_data.strip().split("---------------------------")
+        entries = [e.strip() for e in entries if e.strip()]
+
+        return render_template("admin/logs.html", entries=entries)
+
+    except Exception as e:
+        return f"Error reading logs: {str(e)}", 500
 ```
 
-### `app\controllers\api\get_admin_info_by_id.py`
+### `app\controllers\api\get_admin_info_by_post.py`
 ```python
 import sqlite3
 from flask import request, jsonify
@@ -351,7 +358,14 @@ def get_information_admin():
                 "id": row["id"],
                 "username": row["username"],
                 "password": row["password"],
-                "email": row["email"]
+                "email": row["email"],
+                'first_name': row['first_name'],
+                'last_name': row['last_name'],
+                'number_phone': row['number_phone'],
+                'website_company': row['website_company'],
+                'birth_date': row['birth_date'],
+                'is_admin': row['is_admin'],
+                'created_at': row['created_at']
             }
             return jsonify({"admin_data": admin_data}), 200
         else:
@@ -361,7 +375,7 @@ def get_information_admin():
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 ```
 
-### `app\controllers\api\get_current_admin_info.py`
+### `app\controllers\api\get_current_admin_info_id.py`
 ```python
 import sqlite3
 from flask import jsonify, session
@@ -402,7 +416,7 @@ def get_current_admin_info():
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 ```
 
-### `app\controllers\api\get_current_user_info.py`
+### `app\controllers\api\get_current_user_info_id.py`
 ```python
 import sqlite3
 from flask import jsonify, session
@@ -443,7 +457,7 @@ def get_current_user_info():
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 ```
 
-### `app\controllers\api\get_user_info_by_id.py`
+### `app\controllers\api\get_user_info_by_post.py`
 ```python
 import sqlite3
 from flask import request, jsonify
@@ -507,20 +521,23 @@ def update_balance_user():
             return render_template('user/wallet.html', error=error)
 ```
 
-### `app\controllers\user\xml_parser.py`
+### `app\controllers\user\update_setting.py`
 ```python
-from flask import request, render_template, session
-from app.services.write_log_entries import count_log_entries
+from flask import request, render_template, session, render_template_string
 from app.utils.check_xml_encoding import get_xml_encoding_lxml
+from app.services.write_log_entries import count_log_entries
+from werkzeug.security import generate_password_hash
+from app.services.update_user_profile import update_user_profile
 from lxml import etree
 from app.config import Config
 from datetime import datetime
+from bleach import clean
 
-def handle_parser_info():
+def handle_setting_user():
 
     try:
         if not request.content_type.startswith('application/xml'):
-            return render_template('user/parser_info.html', error="Invalid content type. Only application/xml is accepted.")
+            return render_template('user/setting_user.html', error="Invalid content type. Only application/xml is accepted.")
 
         raw_data = request.data
         if not raw_data:
@@ -528,36 +545,52 @@ def handle_parser_info():
 
         encoding = get_xml_encoding_lxml(raw_data)
         if encoding.lower() != 'utf-8':
-            return render_template('user/parser_info.html', error=f"Only UTF-8 is allowed. Got: {encoding}")
+            return render_template('user/setting_user.html', error=f"Only UTF-8 is allowed. Got: {encoding}")
 
-        config_parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
-        config_root = etree.fromstring(raw_data, parser=config_parser)
-        profile_parser = etree.XMLParser(resolve_entities=True, load_dtd=True, no_network=False)
-        profile_root = etree.fromstring(raw_data, parser=profile_parser)
+        update_setting_V1 = etree.XMLParser(resolve_entities=True, load_dtd=True, no_network=False)
+        root_V1 = etree.fromstring(raw_data, parser=update_setting_V1)
+        update_setting_V2 = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
+        root_V2 = etree.fromstring(raw_data, parser=update_setting_V2)
 
-        username = session.get('username')
-        is_admin = session.get('is_admin')
-        email = config_root.findtext('email')
-        balance = config_root.findtext('balance')
-        setting = config_root.findtext('setting')
-        profile = profile_root.findtext('profile')
+        username = clean(render_template_string(session.get("username")))
+        is_admin = session.get("is_admin")
+        new_email = root_V2.findtext("email")
+        new_birth_date = root_V2.findtext("birth_date")
+        new_setting = root_V1.findtext("setting")
+        new_raw_password = root_V2.findtext("password")
 
         entry_number = count_log_entries(Config.LOG_FILE_RELATIVE_PATH) + 1
         timestamp = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+
         log_entry = (
             f"\n[Entry #{entry_number}]\n"
-            f"Username: {username}\nIs_admin: {is_admin}\n"
-            f"Email: {email}\nBalance: {balance}\n"
-            f"Profile: {profile}\nSetting: {setting}\n"
-            f"Time: {timestamp}\n\n---------------------------"
+            f"Username: {username} | Is_admin: {is_admin}\n"
+            f"New Email: {new_email}\n"
+            f"Birth Date: {new_birth_date}\n"
+            f"Setting: {new_setting}\n"
+            f"Password: {new_raw_password}\n"
+            f"Time: {timestamp}\n"
+            f"---------------------------\n"
         )
-        with open(Config.LOG_FILE_RELATIVE_PATH, 'a') as log_file:
-            log_file.write(log_entry)
+        with open(Config.LOG_FILE_RELATIVE_PATH, "a") as f:
+            f.write(log_entry)
 
-        return render_template('user/parser_info.html', success="Data Saved Successfully!")
+        new_password = generate_password_hash(new_raw_password)
+
+        success_update = update_user_profile(
+            username=username,
+            email=new_email,
+            birth_date=new_birth_date,
+            password=new_password
+        )
+
+        if not success_update:
+            return render_template("user/setting_user.html", error="No fields updated.")
+
+        return render_template("user/setting_user.html", success="Your settings were updated.")
 
     except Exception as e:
-        return render_template('user/parser_info.html', error=str(e))
+        return render_template("user/setting_user.html", error=f"Error while parsing XML: {str(e)}")
 ```
 
 ### `app\database\__init__.py`
@@ -727,6 +760,24 @@ server {
 
 ### `app\logs\logs.txt`
 ```text
+
+[Entry #1]
+Username: longtruong | Is_admin: False
+New Email:
+Birth Date:
+Setting: light_mode
+Password:
+Time: 25-06-2025 11:55:34
+---------------------------
+
+[Entry #2]
+Username: longtruong | Is_admin: False
+New Email:
+Birth Date:
+Setting: dark_mode
+Password:
+Time: 25-06-2025 11:56:06
+---------------------------
 ```
 
 ### `app\routes\__init__.py`
@@ -750,7 +801,7 @@ def admin_login():
 
     return render_template('admin/login_admin.html')
 
-@admin_bp.route('/dashboard', methods=['GET', 'POST'])
+@admin_bp.route('/control-panel', methods=['GET', 'POST'])
 @admin_required
 def admin_panel():
 
@@ -772,10 +823,10 @@ def admin_profile():
 ### `app\routes\api.py`
 ```python
 from flask import Blueprint, request
-from app.controllers.api.get_admin_info_by_id import get_information_admin
-from app.controllers.api.get_user_info_by_id import get_user_info_by_id
-from app.controllers.api.get_current_user_info import get_current_user_info
-from app.controllers.api.get_current_admin_info import get_current_admin_info
+from app.controllers.api.get_admin_info_by_post import get_information_admin
+from app.controllers.api.get_user_info_by_post import get_user_info_by_id
+from app.controllers.api.get_current_user_info_id import get_current_user_info
+from app.controllers.api.get_current_admin_info_id import get_current_admin_info
 from app.utils.decorator_admin import admin_required
 from app.utils.decorator_user import user_required
 
@@ -831,11 +882,7 @@ def login():
         if row and check_password_hash(row[2], raw_password):
             session['username'] = row[0]
             session['is_admin'] = bool(row[1])
-
-            if session.get('is_admin') == True:
-                return redirect(url_for('admin.admin_panel'))
-            else:
-                return redirect(url_for('user.dashboard'))
+            return redirect(url_for('user.user_dashboard'))
 
         else:
             error = "Invalid Username or Password"
@@ -1009,23 +1056,23 @@ def index():
 from flask import Blueprint, render_template, request, session, render_template_string
 from bleach import clean
 from app.utils.decorator_user import user_required
-from app.controllers.user.xml_parser import handle_parser_info
+from app.controllers.user.update_setting import handle_setting_user
 from app.controllers.user.update_balance import update_balance_user
 
 user_bp = Blueprint('user', __name__)
 
-@user_bp.route('/parser-info', methods=['GET', 'POST'])
+@user_bp.route('/setting', methods=['GET', 'POST'])
 @user_required
-def parser_info():
+def user_parser_info():
 
     if request.method == 'POST':
-        return handle_parser_info()
+        return handle_setting_user()
 
-    return render_template('user/parser_info.html')
+    return render_template('user/setting_user.html')
 
 @user_bp.route('/balances', methods=['GET', 'POST'])
 @user_required
-def update_balance():
+def user_update_balance():
 
     if request.method == 'POST':
         return update_balance_user()
@@ -1034,13 +1081,13 @@ def update_balance():
 
 @user_bp.route('/profile', methods=['GET', 'POST'])
 @user_required
-def profile():
+def user_profile():
 
-    return render_template('user/profile_user.html', template_rendered=clean(render_template_string(session['username'])))
+    return render_template('user/profile_user.html', template_rendered=session['username'])
 
 @user_bp.route('/dashboard', methods=['GET'])
 @user_required
-def dashboard():
+def user_dashboard():
 
     return render_template('user/dashboard.html', username=session['username'])
 ```
@@ -1084,21 +1131,55 @@ def send_reset_email(email, reset_url):
     thread.start()
 ```
 
+### `app\services\update_user_profile.py`
+```python
+import sqlite3
+from app.config import Config
+
+def update_user_profile(username, email=None, birth_date=None, password=None):
+    db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    update_fields = []
+    values = []
+
+    if email:
+        update_fields.append("email = ?")
+        values.append(email)
+    if birth_date:
+        update_fields.append("birth_date = ?")
+        values.append(birth_date)
+    if password:
+        update_fields.append("password = ?")
+        values.append(password)
+
+    if not update_fields:
+        conn.close()
+        return False
+
+    values.append(username)
+    query = f"UPDATE users SET {', '.join(update_fields)} WHERE username = ?"
+
+    cursor.execute(query, values)
+    conn.commit()
+    conn.close()
+    return True
+```
+
 ### `app\services\write_log_entries.py`
 ```python
 from app.config import Config
 
 log_file_path = Config.LOG_FILE_RELATIVE_PATH
 
-def count_log_entries(filename=log_file_path):
-
+def count_log_entries(file_path):
     try:
-        with open(filename, 'r') as f:
-            lines = f.readline()
-        count = sum(1 for line in lines if line.startswith('[Entry'))
-        return count
-
-    except FileExistsError:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        entries = content.split('---------------------------')
+        return len([e for e in entries if e.strip()])
+    except FileNotFoundError:
         return 0
 ```
 
@@ -1122,164 +1203,244 @@ allow: /logout
 
 ### `app\static\style2.css`
 ```css
-/* Unified styles for Bug-Bounty-Web */
+/* Bug-Bounty-Web — Dark Mode Theme with Responsive Layout */
 
-body {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #e0e0e0;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+/* Reset & Base */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  width: 100%;
+  min-height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: #e0e0e0;
+  line-height: 1.5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  font-size: 16px;
+  visibility: hidden;
+}
+
+/* Card Wrapper */
+.card {
+  width: 100%;
+  max-width: 650px;
+  background: rgba(20, 20, 30, 0.9);
+  border: 1px solid #00ffa3;
+  border-radius: 12px;
+  box-shadow: 0 0 18px #00ffa3;
+  overflow: hidden;
+  padding: 25px;
+  margin: 0 auto;
+}
+
+/* Header */
+.card header {
+  text-align: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #00ffa366;
+}
+.card header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #00ffa3;
+}
+.card header p {
+  font-size: 1rem;
+  color: #b8ffe6;
+}
+
+/* Main */
+.card main {
+  margin-top: 20px;
+}
+
+/* Profile Info */
+.card .profile-info {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #00ffa3;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  word-break: break-word;
+}
+.card .profile-info p {
+  font-size: 1rem;
+  color: #e0e0e0;
+}
+
+/* Form Styles */
+.card form {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px 30px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.card form label {
+  font-size: 1rem;
+  font-weight: 600;
+  justify-self: end;
+  color: #a0ffa3;
+}
+.card form input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #00ffa3;
+  border-radius: 10px;
+  font-size: 1rem;
+  background-color: #121212;
+  color: #e0e0e0;
+}
+.card form input:focus {
+  border-color: #00ffa3;
+  outline: none;
+  box-shadow: 0 0 6px #00ffa3;
+}
+
+/* Buttons */
+.card button {
+  grid-column: 2 / 3;
+  width: 100%;
+  padding: 14px;
+  background: #00ffa3;
+  color: #0f2027;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+.card button:hover {
+  background: #00cc7a;
+}
+
+/* Result Box */
+.card .result-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #00ffa3;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  overflow-x: auto;
+  word-break: break-word;
+}
+.card .result-box .label {
+  font-weight: 600;
+  display: inline-block;
+  width: 120px;
+  color: #a0ffa3;
+}
+.card .result-box .value, .card .result-box .error, .card .result-box .success {
+  font-size: 1rem;
+}
+
+/* Finance Info Box */
+.finance-info {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #00ffa3;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 25px;
+  color: #e0e0e0;
+}
+.finance-info p {
+  color: #e0e0e0;
+}
+.finance-info strong {
+  color: #00ffa3;
+}
+
+/* Footer */
+.card footer {
+  text-align: center;
+  padding: 15px;
+  font-size: 0.95rem;
+  color: #7a7a7a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    max-width: 95%;
+    padding: 20px;
   }
-
-  .container {
-    background-color: rgba(20, 20, 30, 0.9);
-    padding: 40px 50px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px #00ffa3;
+  .card form {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .card form label {
+    justify-self: start;
+  }
+  .card button {
     width: 100%;
-    max-width: 600px;
-    text-align: center;
-    box-sizing: border-box;
+    grid-column: auto;
   }
+}
+/* Admin Panel Specific */
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 25px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-  h1, h2 {
-    color: #00ffa3;
-    font-weight: 700;
-    margin-bottom: 25px;
-    text-align: center;
-  }
+.menu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #e0e0e0;
+  font-weight: 500;
+  padding: 10px 15px;
+  border-radius: 8px;
+  background-color: #1a2b3c;
+  transition: background 0.2s, color 0.2s;
+}
 
-  label {
-    font-weight: 600;
-    color: #a0ffa3;
-    margin-bottom: 8px;
-    display: block;
-    text-align: left;
-  }
+.menu li a:hover {
+  background-color: #00ffa340;
+  color: #00ffa3;
+}
 
-  input, textarea {
-    padding: 12px 15px;
-    border-radius: 8px;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    background-color: #121212;
-    color: #e0e0e0;
-    box-shadow: inset 0 0 8px #00ffa3;
-    transition: box-shadow 0.3s ease;
-    width: 100%;
-    margin-bottom: 20px;
-  }
+.menu li:last-child a {
+  background-color: #3a1a1a;
+  color: #ff4d6d;
+}
 
-  input:focus, textarea:focus {
-    box-shadow: 0 0 10px #00ffa3;
-  }
+.menu li:last-child a:hover {
+  background-color: #ff4d6d33;
+  color: #ff4d6d;
+}
 
-  button {
-    background-color: #00ffa3;
-    border: none;
-    padding: 14px 20px;
-    border-radius: 10px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #0f2027;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  }
+/* Admin Panel Title */
+.card h1 {
+  color: #00ffa3;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.navigation-links a {
+  background-color: rgb(255, 255, 255);
+  border: 1px solid #00ffa3;
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: background 0.2s ease-in-out;
+}
 
-  button:hover {
-    background-color: #00cc7a;
-    box-shadow: 0 0 15px #00cc7a;
-  }
-
-  a {
-    color: #00ffa3;
-    text-decoration: none;
-    font-weight: 600;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-
-  .material-symbols-rounded, .material-icons {
-    font-size: 22px;
-    vertical-align: middle;
-    color: #00ffa3;
-    margin-right: 6px;
-  }
-
-  ul.menu, ul.navigation-links {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  ul.menu li a, ul.navigation-links li a, a.button-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 12px 20px;
-    border: 1px solid #00ffa3;
-    border-radius: 10px;
-    color: #00ffa3;
-    text-decoration: none;
-    font-weight: 600;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-
-  ul.menu li a:hover, ul.navigation-links li a:hover, a.button-link:hover {
-    background-color: #00ffa3;
-    color: #0f2027;
-  }
-
-  .message {
-    font-weight: bold;
-    margin-top: 20px;
-  }
-
-  .success {
-    color: #00ffa3;
-  }
-
-  .error {
-    color: #ff4f4f;
-  }
-
-  .result-message {
-    background-color: rgba(0, 255, 163, 0.15);
-    color: #00ffa3;
-    box-shadow: 0 0 10px #00ffa3;
-  }
-
-  .error-message {
-    background-color: rgba(255, 50, 50, 0.15);
-    color: #ff3232;
-    box-shadow: 0 0 10px #ff3232;
-  }
-
-  @media screen and (max-width: 768px) {
-    .container {
-      padding: 30px;
-      max-width: 90%;
-    }
-
-    h1, h2 {
-      font-size: 1.8rem;
-    }
-
-    input, textarea, button {
-      font-size: 1rem;
-    }
-  }
+.navigation-links a:hover {
+  background-color: rgba(211, 205, 205, 0.459);
+}
 ```
 
 ### `app\static\styles.css`
@@ -1304,6 +1465,7 @@ html, body {
   align-items: center;
   padding: 20px;
   font-size: 16px;
+  visibility: hidden;
 }
 
 /* Card Wrapper */
@@ -1443,6 +1605,33 @@ html, body {
     grid-column: auto;
   }
 }
+.finance-info {
+  background-color: rgba(255, 255, 255, 0.05); /* nhẹ nhàng hơn, hài hòa với dark */
+  border: 1px solid #00ffa3;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 25px;
+  color: #1900ff; /* text cho rõ hơn */
+}
+
+.finance-info p {
+  color: #1900ff;
+}
+
+.finance-info strong {
+  color: #1900ff;
+}
+.navigation-links a {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #00ffa3;
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: background 0.2s ease-in-out;
+}
+
+.navigation-links a:hover {
+  background-color: rgba(0, 255, 163, 0.1);
+}
 ```
 
 ### `app\templates\index.html`
@@ -1454,13 +1643,22 @@ html, body {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="card">
         <h1>Welcome to the Ebook Website</h1>
         <label><p class="info">Hi! If you have an account, you can <a href="/auth/login">Login</a></p></label>
         <label><p class="info">Don't have an account? No worries! You can <a href="/auth/register">Register</a> here.</p></label>
+        <script>
+            (function () {
+              const style = localStorage.getItem('style') || 'light_mode';
+              const link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.onload = () => document.body.style.visibility = 'visible';
+              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+              document.head.appendChild(link);
+            })();
+          </script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1477,11 +1675,10 @@ html, body {
     <title>Control Panel</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="card">
@@ -1492,30 +1689,40 @@ html, body {
         <ul class="menu">
             <li>
                 <a href="/admin/profile">
-                    <span class="material-symbols-rounded">person</span> Profile
+                    <span class="material-icons">person</span> Profile
                 </a>
             </li>
             <li>
                 <a href="/admin/settings">
-                    <span class="material-symbols-rounded">settings</span> Settings
+                    <span class="material-icons">settings</span> Settings
                 </a>
             </li>
             <li>
                 <a href="/admin/notifications">
-                    <span class="material-symbols-rounded">notifications</span> Update Notification
+                    <span class="material-icons">notifications</span> Update Notification
                 </a>
             </li>
             <li>
                 <a href="/admin/logs">
-                    <span class="material-symbols-rounded">list_alt</span> Logs
+                    <span class="material-icons">list_alt</span> Logs
                 </a>
             </li>
             <li>
                 <a href="/auth/logout?running=True">
-                    <span class="material-symbols-rounded">logout</span> Logout
+                    <span class="material-icons">logout</span> Logout
                 </a>
             </li>
         </ul>
+        <script>
+            (function () {
+              const style = localStorage.getItem('style') || 'light_mode';
+              const link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.onload = () => document.body.style.visibility = 'visible';
+              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+              document.head.appendChild(link);
+            })();
+          </script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1532,8 +1739,10 @@ html, body {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <title>Control Panel Login</title>
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="card">
@@ -1551,10 +1760,73 @@ html, body {
             <p style="color:royalblue;"> {{ error }}</p>
             {% endif %}
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+        <script>
+            (function () {
+              const style = localStorage.getItem('style') || 'light_mode';
+              const link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.onload = () => document.body.style.visibility = 'visible';
+              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+              document.head.appendChild(link);
+            })();
+          </script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
     </div>
+</body>
+</html>
+```
+
+### `app\templates\admin\logs.html`
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Logs File</title>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <link rel='icon' href='/static/favicon.ico' type='image/x-icon' />
+  <link href='https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap' rel='stylesheet' />
+  <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet' />
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #121212;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+    .entry {
+      background: #1e1e1e;
+      border: 1px solid #00ffa3;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Logs File</h1>
+
+  {% for entry in entries %}
+    <div class="entry">{{ entry }}</div>
+  {% else %}
+    <p>No logs found.</p>
+  {% endfor %}
+
+  <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
+    <li>
+      <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+        <span class="material-icons">arrow_back</span> Back
+      </a>
+    </li>
+    <li>
+      <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #e74c3c; font-weight: 600;">
+        <span class="material-icons">logout</span> Logout
+      </a>
+    </li>
+  </ul>
 </body>
 </html>
 ```
@@ -1567,15 +1839,11 @@ html, body {
     <title>Profile</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <!-- Google Fonts -->
-     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
 
-     <!-- Material Icons -->
-     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-     <!-- Internal CSS -->
-     <link rel="stylesheet" href="/static/styles.css">
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
 <body>
     <div class="card">
@@ -1585,17 +1853,33 @@ html, body {
 
         <div id="result" class="result-box" style="display:none;">Information</div>
 
-        <li>
-            <a href="/auth/logout?running=True">
-                <span class="material-icons">logout</span> Logout
-            </a>
-        </li>
+        <ul style="list-style: none; padding: 0; margin-top: 20px;">
+          <li style="margin-bottom: 12px;">
+              <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+                  <span class="material-icons">arrow_back</span> Back
+              </a>
+          </li>
+          <li>
+              <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #e74c3c; font-weight: 600;">
+                  <span class="material-icons">logout</span> Logout
+              </a>
+          </li>
+        </ul>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
     </div>
 
     <script>
+      (function () {
+        const style = localStorage.getItem('style') || 'light_mode';
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.onload = () => document.body.style.visibility = 'visible';
+        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+        document.head.appendChild(link);
+      })();
+
       async function fetchProfileData() {
         const resultBox = document.getElementById('result');
         try {
@@ -1645,7 +1929,6 @@ html, body {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
     <title>Login</title>
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="card">
@@ -1664,6 +1947,16 @@ html, body {
             {% endif %}
         <p>Don't have an account? <a href="/auth/register">Register Here</a></p>
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+        <script>
+            (function () {
+              const style = localStorage.getItem('style') || 'light_mode';
+              const link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.onload = () => document.body.style.visibility = 'visible';
+              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+              document.head.appendChild(link);
+            })();
+          </script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1681,7 +1974,6 @@ html, body {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>Redirecting ...</title>
-  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <div class="card">
@@ -1694,6 +1986,14 @@ html, body {
   </div>
   {% if running %}
   <script>
+    (function () {
+      const style = localStorage.getItem('style') || 'light_mode';
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.onload = () => document.body.style.visibility = 'visible';
+      link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+      document.head.appendChild(link);
+    })();
     let countdown = 5;
     const countdownSpan = document.getElementById('countdown');
 
@@ -1706,6 +2006,7 @@ html, body {
         window.location.href = '/auth/login';
       }
     }, 1000);
+
   </script>
   {% endif %}
 
@@ -1722,7 +2023,6 @@ html, body {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>Registration Form</title>
-  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <div class="card">
@@ -1776,7 +2076,16 @@ html, body {
       </section>
 
     </main>
-
+    <script>
+      (function () {
+        const style = localStorage.getItem('style') || 'light_mode';
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.onload = () => document.body.style.visibility = 'visible';
+        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+        document.head.appendChild(link);
+      })();
+    </script>
     <!-- Footer -->
     <footer>
       &copy; 2025 TheWindGhost
@@ -1799,7 +2108,6 @@ html, body {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="card">
@@ -1812,6 +2120,16 @@ html, body {
             <p>{{ Notification }}</p>
             {% endif %}
         </form>
+        <script>
+            (function () {
+              const style = localStorage.getItem('style') || 'light_mode';
+              const link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.onload = () => document.body.style.visibility = 'visible';
+              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+              document.head.appendChild(link);
+            })();
+          </script>
     <!-- Footer -->
     <footer>
         &copy; 2025 TheWindGhost
@@ -1834,7 +2152,6 @@ html, body {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="card">
@@ -1850,6 +2167,16 @@ html, body {
             {% endif %}
         </form>
     </div>
+    <script>
+        (function () {
+          const style = localStorage.getItem('style') || 'light_mode';
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.onload = () => document.body.style.visibility = 'visible';
+          link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+          document.head.appendChild(link);
+        })();
+      </script>
     <!-- Footer -->
     <footer>
         &copy; 2025 TheWindGhost
@@ -1867,7 +2194,6 @@ html, body {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>403 Forbidden</title>
-  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <div class="card">
@@ -1887,6 +2213,14 @@ html, body {
         window.history.back();
       }
     }
+    (function () {
+      const style = localStorage.getItem('style') || 'light_mode';
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.onload = () => document.body.style.visibility = 'visible';
+      link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+      document.head.appendChild(link);
+    })();
   </script>
 </body>
 </html>
@@ -1897,114 +2231,91 @@ html, body {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Dashboard</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-
-    <!-- Material Symbols Rounded -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
-
-    <!-- Internal CSS -->
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-    <div class="card">
-        <h1>Dashboard</h1>
-
-        <div class="user-info">
-            <h2>
-                <span class="material-symbols-rounded">waving_hand</span>
-                Welcome Back <span class="username">{{ username }}</span>!
-            </h2>
-            <p><strong>Status:</strong> <span class="status-active">Active</span></p>
-        </div>
-
-        <div class="finance-info">
-            <p>
-                <span class="material-symbols-rounded">account_balance</span> Account balance: $1,250.75
-            </p>
-            <p>
-                <span class="material-symbols-rounded">receipt_long</span> Last Transaction: $50.00 (Withdrawn)
-            </p>
-            <p>
-                <span class="material-symbols-rounded">hourglass_empty</span> Pending Transactions: $200.00
-            </p>
-        </div>
-
-        <ul class="navigation-links">
-            <li>
-                <a href="/user/profile">
-                    <span class="material-symbols-rounded">person</span> Your Profile
-                </a>
-            </li>
-            <li>
-                <a href="/user/settings">
-                    <span class="material-symbols-rounded">settings</span> Settings
-                </a>
-            </li>
-            <li>
-                <a href="/user/balances">
-                    <span class="material-symbols-rounded">account_balance_wallet</span> Update Balance
-                </a>
-            </li>
-            <li>
-                <a href="/auth/logout?running=True">
-                    <span class="material-symbols-rounded">logout</span> Logout
-                </a>
-            </li>
-        </ul>
-        <footer>
-            &copy; 2025 TheWindGhost
-        </footer>
-    </div>
-</body>
-</html>
-```
-
-### `app\templates\user\parser_info.html`
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Parser Info</title>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css">
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
 </head>
 <body>
   <div class="card">
-    <h1>Submit XML Info</h1>
-    <form method="POST" novalidate>
-      <textarea id="xmlInput" name="xml_data"></textarea>
-      <button type="submit">Submit</button>
-    </form>
-    <!--<?xml version="1.0" encoding="ISO-8859-1"?>
-      <root>
-      <username>long</username>
-      <is_admin>False</is_admin>
-      <email>long@example.com</email>
-      <balance>1000</balance>
-      <profile>VIP</profile>
-      <setting>dark_mode</setting>
-      <time>2025-06-06 10:15:53</time>
-      </root>-->
-    <div id="clientError" class="message error" style="display:none;"></div>
 
-    {% if success %}
-      <div class="message success">{{ success }}</div>
-    {% endif %}
-    {% if error %}
-      <div class="message error">{{ error }}</div>
-    {% endif %}
-    <footer>
+    <header style="text-align: center; margin-bottom: 20px;">
+      <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+        <span class="material-icons">dashboard</span>
+        Dashboard
+      </h1>
+    </header>
+
+    <section class="user-info" style="margin-bottom: 25px;">
+      <h2 style="font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+        <span class="material-icons">waving_hand</span>
+        Welcome Back, <span class="username" style="color: #4a90e2;">{{ username }}</span>!
+      </h2>
+      <p style="margin-top: 8px;"><strong>Status:</strong> <span class="status-active" style="color: green; font-weight: 600;">Active</span></p>
+    </section>
+
+    <section class="finance-info">
+      <p style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <span class="material-icons">account_balance</span>
+        <strong>Account Balance:</strong> $1,250.75
+      </p>
+      <p style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <span class="material-icons">receipt_long</span>
+        <strong>Last Transaction:</strong> $50.00 (Withdrawn)
+      </p>
+      <p style="display: flex; align-items: center; gap: 8px;">
+        <span class="material-icons">hourglass_empty</span>
+        <strong>Pending:</strong> $200.00
+      </p>
+    </section>
+
+    <nav>
+      <ul class="navigation-links" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+        <li>
+          <a href="/user/profile" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #2d3e50; font-weight: 600;">
+            <span class="material-icons">person</span> Profile
+          </a>
+        </li>
+        <li>
+          <a href="/user/setting" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #2d3e50; font-weight: 600;">
+            <span class="material-icons">settings</span> Setting
+          </a>
+        </li>
+        <li>
+          <a href="/user/balances" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #2d3e50; font-weight: 600;">
+            <span class="material-icons">account_balance_wallet</span> Balances
+          </a>
+        </li>
+        <li>
+          <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #e74c3c; font-weight: 600;">
+            <span class="material-icons">logout</span> Logout
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <script>
+      (function () {
+        const style = localStorage.getItem('style') || 'light_mode';
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.onload = () => document.body.style.visibility = 'visible';
+        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+        document.head.appendChild(link);
+      })();
+    </script>
+
+    <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
       &copy; 2025 TheWindGhost
     </footer>
+
   </div>
 </body>
 </html>
@@ -2021,12 +2332,8 @@ html, body {
      <!-- Google Fonts -->
      <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
      <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-
      <!-- Material Icons -->
      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-     <!-- Internal CSS -->
-     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="card">
@@ -2036,11 +2343,19 @@ html, body {
 
         <div id="result" class="result-box" style="display:none;">Information</div>
 
-        <li>
-            <a href="/auth/logout?running=True">
-                <span class="material-icons">logout</span> Logout
-            </a>
-        </li>
+        <ul style="list-style: none; padding: 0; margin-top: 20px;">
+          <li style="margin-bottom: 12px;">
+              <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+                  <span class="material-icons">arrow_back</span> Back
+              </a>
+          </li>
+          <li>
+              <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #e74c3c; font-weight: 600;">
+                  <span class="material-icons">logout</span> Logout
+              </a>
+          </li>
+        </ul>
+
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -2082,7 +2397,139 @@ html, body {
         }
 
         window.onload = fetchProfileData;
+
+        (function () {
+          const style = localStorage.getItem('style') || 'light_mode';
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.onload = () => document.body.style.visibility = 'visible';
+          link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+          document.head.appendChild(link);
+        })();
       </script>
+</body>
+</html>
+```
+
+### `app\templates\user\setting_user.html`
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Settings Update</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <!-- Google Fonts & Material Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+</head>
+<body>
+  <div class="card">
+    <h1 style="text-align: center;">User Settings</h1>
+
+    <form id="settings-form" method="POST" style="display: flex; flex-direction: column; gap: 14px;">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="user@example.com" />
+
+      <label>Date of Birth</label>
+      <input type="date" id="birth_date" />
+
+      <label>New Password</label>
+      <input type="password" id="password" placeholder="Enter new password" />
+
+      <label>Interface Style</label>
+      <select id="setting">
+        <option value="light_mode">Light Mode</option>
+        <option value="dark_mode">Dark Mode</option>
+      </select>
+
+      <button type="submit" style="padding: 12px; background-color: #4a90e2; color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
+        Save Changes
+      </button>
+    </form>
+
+    <div id="clientError" class="message error" style="display:none; margin-top: 10px;"></div>
+
+    {% if success %}
+      <div class="message success" style="margin-top: 15px; color: green; font-weight: 600;">
+        {{ success }}
+      </div>
+    {% endif %}
+    {% if error %}
+      <div class="message error" style="margin-top: 15px; color: red; font-weight: 600;">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
+      <li>
+        <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+          <span class="material-icons">arrow_back</span> Back
+        </a>
+      </li>
+      <li>
+        <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #e74c3c; font-weight: 600;">
+          <span class="material-icons">logout</span> Logout
+        </a>
+      </li>
+    </ul>
+
+    <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
+      &copy; 2025 TheWindGhost
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('settings-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const data = {
+        email: document.getElementById('email').value,
+        birth_date: document.getElementById('birth_date').value,
+        password: document.getElementById('password').value,
+        setting: document.getElementById('setting').value,
+      };
+
+      localStorage.setItem('style', data.setting);
+
+      const xmlPayload = `
+        <?xml version="1.0" encoding="UTF-8"?>
+        <root>
+          <email>${data.email}</email>
+          <birth_date>${data.birth_date}</birth_date>
+          <password>${data.password}</password>
+          <setting>${data.setting}</setting>
+        </root>
+      `.trim();
+
+      try {
+        const res = await fetch('/user/setting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/xml' },
+          credentials: 'include',
+          body: xmlPayload
+        });
+
+        const html = await res.text();
+        document.open();
+        document.write(html);
+        document.close();
+      } catch (err) {
+        document.getElementById('clientError').style.display = 'block';
+        document.getElementById('clientError').textContent = "Failed to submit. Check network or server.";
+      }
+    });
+
+    (function () {
+      const style = localStorage.getItem('style') || 'light_mode';
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.onload = () => document.body.style.visibility = 'visible';
+      link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+      document.head.appendChild(link);
+    })();
+  </script>
 </body>
 </html>
 ```
@@ -2092,37 +2539,74 @@ html, body {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-    <title>Wallet</title>
-    <link rel="stylesheet" href="/static/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <title>Wallet</title>
+
+  <!-- Internal CSS -->
+  <link rel="stylesheet" href="/static/styles.css">
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div class="card">
-        <h2>Update Your Balance</h2>
+  <div class="card">
+    <h2 style="font-size: 1.8rem; text-align: center; margin-bottom: 20px;">Update Your Balance</h2>
 
-        <form action="/user/balances" method="POST">
-            <label for="balance">Enter New Balance</label>
-            <input type="text" id="balance" name="balance" class="balance-input" required>
+    <form action="/user/balances" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+      <label for="balance" style="font-weight: 600;">Enter New Balance</label>
+      <input type="text" id="balance" name="balance" class="balance-input" required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
 
-            <button type="submit" class="submit-button">Update Balance</button>
-        </form>
+      <button type="submit" class="submit-button" style="padding: 12px; background-color: #4a90e2; color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
+        Update Balance
+      </button>
+    </form>
 
-        {% if result %}
-        <div class="result-message">
-            <p>You have: {{ result }} in your wallet</p>
-        </div>
-        {% elif error %}
-        <div class="error-message">
-            <p>{{ error }}</p>
-        </div>
-        {% endif %}
-        <footer>
-            &copy; 2025 TheWindGhost
-        </footer>
+    {% if result %}
+    <div class="result-message" style="margin-top: 15px; color: green; font-weight: 600;">
+      <p>You have: {{ result }} in your wallet</p>
     </div>
+    {% elif error %}
+    <div class="error-message" style="margin-top: 15px; color: red; font-weight: 600;">
+      <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+    <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
+      <li>
+        <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+          <span class="material-icons">arrow_back</span> Back
+        </a>
+      </li>
+      <li>
+        <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #e74c3c; font-weight: 600;">
+          <span class="material-icons">logout</span> Logout
+        </a>
+      </li>
+    </ul>
+
+    <script>
+      (function () {
+        const style = localStorage.getItem('style') || 'light_mode';
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.onload = () => document.body.style.visibility = 'visible';
+        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+        document.head.appendChild(link);
+      })();
+    </script>
+
+    <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
+      &copy; 2025 TheWindGhost
+    </footer>
+
+  </div>
+
 </body>
 </html>
 ```

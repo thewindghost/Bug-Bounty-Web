@@ -16,3 +16,102 @@ Setting: dark_mode
 Password: 
 Time: 25-06-2025 11:56:06
 ---------------------------
+
+[Entry #3]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: dark_mode
+Password: 
+Time: 25-06-2025 18:02:31
+---------------------------
+
+[Entry #4]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: light_mode
+Password: 
+Time: 25-06-2025 18:02:35
+---------------------------
+
+[Entry #5]
+Username: guest | Is_admin: False
+New Email: longbinhquoitay8@gmail.com
+Birth Date: 2025-06-25
+Setting: dark_mode
+Password: long123
+Time: 25-06-2025 18:02:44
+---------------------------
+
+[Entry #6]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: light_mode
+Password: 
+Time: 25-06-2025 18:07:50
+---------------------------
+
+[Entry #7]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: dark_mode
+Password: 
+Time: 25-06-2025 18:10:57
+---------------------------
+
+[Entry #8]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: dark_mode
+Password: 
+Time: 25-06-2025 18:11:13
+---------------------------
+
+[Entry #9]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: light_mode
+Password: 
+Time: 25-06-2025 18:11:15
+---------------------------
+
+[Entry #10]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: dark_mode
+Password: 
+Time: 25-06-2025 18:11:25
+---------------------------
+
+[Entry #11]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: light_mode
+Password: 
+Time: 25-06-2025 18:13:08
+---------------------------
+
+[Entry #12]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: dark_mode
+Password: 
+Time: 25-06-2025 18:13:12
+---------------------------
+
+[Entry #13]
+Username: guest | Is_admin: False
+New Email: 
+Birth Date: 
+Setting: light_mode
+Password: 
+Time: 25-06-2025 18:13:16
+---------------------------

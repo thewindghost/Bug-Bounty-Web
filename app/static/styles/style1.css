@@ -1,6 +1,5 @@
-/* Bug-Bounty-Web — Responsive Compact Theme with Adjusted Font Scaling */
+/* Light Mode - Harmonized Version */
 
-/* Reset & Base */
 *, *::before, *::after {
   margin: 0;
   padding: 0;
@@ -18,17 +17,15 @@ html, body {
   align-items: center;
   padding: 20px;
   font-size: 16px;
-  visibility: hidden;
 }
 
-/* Card Wrapper */
 .card {
   width: 100%;
   max-width: 650px;
   background: #ffffff;
-  border: 1px solid #e0e6ed;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid #d3e3fc;
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgba(74, 144, 226, 0.2);
   overflow: hidden;
   padding: 25px;
   margin: 0 auto;
@@ -38,38 +35,73 @@ html, body {
 .card header {
   text-align: center;
   padding-bottom: 15px;
-  border-bottom: 1px solid #e0e6ed;
+  border-bottom: 1px solid #d3e3fc;
 }
 .card header h1 {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 5px;
+  color: #4a90e2;
 }
 .card header p {
   font-size: 1rem;
   color: #4a5568;
 }
 
-/* Main */
-.card main {
-  margin-top: 20px;
+/* Menu */
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 25px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* Profile Info */
-.card .profile-info {
-  background: #fafafa;
-  border: 1px solid #e0e6ed;
+.menu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #2d3e50;
+  font-weight: 500;
+  padding: 10px 15px;
+  border-radius: 8px;
+  background-color: #e3edf7;
+  transition: background 0.2s, color 0.2s;
+}
+
+.menu li a:hover {
+  background-color: #d0e2f0;
+  color: #4a90e2;
+}
+
+.menu li:last-child a {
+  background-color: #ffe5e5;
+  color: #e74c3c;
+}
+
+.menu li:last-child a:hover {
+  background-color: #fddede;
+  color: #c0392b;
+}
+
+/* Profile Info Box */
+.profile-info {
+  background: #f2f8fd;
+  border: 1px solid #d3e3fc;
   padding: 15px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-bottom: 20px;
   overflow-x: auto;
   word-break: break-word;
 }
-.card .profile-info p {
+.profile-info p {
   font-size: 1rem;
+  color: #2d3e50;
 }
 
-/* Form Styles */
+/* Form */
 .card form {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -81,6 +113,7 @@ html, body {
   font-size: 1rem;
   font-weight: 600;
   justify-self: end;
+  color: #4a4a4a;
 }
 .card form input {
   width: 100%;
@@ -88,19 +121,22 @@ html, body {
   border: 1px solid #c3cfe2;
   border-radius: 10px;
   font-size: 1rem;
+  background-color: #fff;
+  color: #2d3e50;
 }
 .card form input:focus {
   border-color: #4a90e2;
   outline: none;
-  box-shadow: 0 0 6px rgba(74,144,226,0.4);
+  box-shadow: 0 0 6px rgba(74, 144, 226, 0.4);
 }
 
+/* Button */
 .card button {
   grid-column: 2 / 3;
   width: 100%;
   padding: 14px;
   background: #4a90e2;
-  color: #fff;
+  color: #ffffff;
   font-size: 1.1rem;
   font-weight: 600;
   border: none;
@@ -114,22 +150,20 @@ html, body {
 }
 
 /* Result Box */
-.card .result-box {
+.result-box {
   background: #ffffff;
-  border: 1px solid #e0e6ed;
+  border: 1px solid #d3e3fc;
   padding: 15px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-top: 20px;
   overflow-x: auto;
   word-break: break-word;
 }
-.card .result-box .label {
+.result-box .label {
   font-weight: 600;
   display: inline-block;
   width: 120px;
-}
-.card .result-box .value, .card .result-box .error, .card .result-box .success {
-  font-size: 1rem;
+  color: #2d3e50;
 }
 
 /* Footer */
@@ -158,30 +192,60 @@ html, body {
     grid-column: auto;
   }
 }
+.card {
+  width: 100%;
+  max-width: 650px;
+  background: #ffffff;
+  border: 1px solid #d0d7de; /* viền sáng rõ */
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* bóng rõ ràng */
+  padding: 30px;
+  margin: 0 auto;
+  transition: box-shadow 0.3s ease;
+}
 .finance-info {
-  background-color: rgba(255, 255, 255, 0.05); /* nhẹ nhàng hơn, hài hòa với dark */
-  border: 1px solid #00ffa3;
+  background-color: #f9fbfd; /* nhẹ hơn trắng */
+  border: 1px solid #cbd6e2;
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 25px;
-  color: #1900ff; /* text cho rõ hơn */
+  color: #2d3e50;
 }
 
 .finance-info p {
-  color: #1900ff;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .finance-info strong {
-  color: #1900ff;
+  color: #2d3e50;
 }
 .navigation-links a {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid #00ffa3;
+  background-color: #f5f7fa;
+  border: 1px solid #d0d7de;
   border-radius: 8px;
-  padding: 12px 14px;
-  transition: background 0.2s ease-in-out;
+  padding: 10px 14px;
+  color: #2d3e50;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: background 0.2s ease;
 }
 
 .navigation-links a:hover {
-  background-color: rgba(0, 255, 163, 0.1);
+  background-color: #ffffff;
+}
+
+.navigation-links a:last-child {
+  border-color: #4a90e2;
+  color: #4a90e2;
+  background-color: #fdfdfd;
+}
+
+.navigation-links a:last-child:hover {
+  background-color: #ffffff;
 }

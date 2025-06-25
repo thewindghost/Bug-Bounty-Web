@@ -11,6 +11,12 @@
 
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    const style = localStorage.getItem('style') || 'light_mode';
+    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+    document.write(`<link rel="stylesheet" href="${css}">`);
+  </script>
+  <script src="{{ url_for('static', filename='script-js/get_balance_user.js') }}" defer></script>
 
 </head>
 <body>
@@ -67,9 +73,6 @@
         </li>
       </ul>
     </nav>
-
-    <script src="/static/script-js/get_balance_user.js"></script>
-    <script src="/static/script-js/load_style.js"></script>
 
     <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
       &copy; 2025 TheWindGhost

@@ -8,6 +8,17 @@
   <!-- Google Fonts & Material Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <script>
+    (function(){
+      const mode = localStorage.getItem('style') || 'light_mode';
+      const href = mode === 'dark_mode'
+        ? '/static/styles/style2.css'
+        : '/static/styles/style1.css';
+      document.write(`<link rel="stylesheet" id="theme-stylesheet" href="${href}">`);
+    })();
+  </script>
+  
+  <script src="{{ url_for('static', filename='script-js/update_setting_user.js') }}"></script>
 </head>
 <body>
   <div class="card">
@@ -49,7 +60,7 @@
 
     <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
       <li>
-        <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+        <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
           <span class="material-icons">arrow_back</span> Back
         </a>
       </li>
@@ -65,7 +76,5 @@
     </footer>
   </div>
 
-  <script src="/static/script-js/update_setting_user.js"></script>
-  <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>

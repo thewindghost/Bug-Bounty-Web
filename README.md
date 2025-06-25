@@ -103,7 +103,6 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   │   ├── get_balance_user.js
     │   │   ├── get_information_admin.js
     │   │   ├── get_information_user.js
-    │   │   ├── load_style.js
     │   │   ├── redirect_referer.js
     │   │   └── update_setting_user.js
     │   └── styles/
@@ -796,6 +795,105 @@ Setting: dark_mode
 Password:
 Time: 25-06-2025 11:56:06
 ---------------------------
+
+[Entry #3]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: dark_mode
+Password:
+Time: 25-06-2025 18:02:31
+---------------------------
+
+[Entry #4]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: light_mode
+Password:
+Time: 25-06-2025 18:02:35
+---------------------------
+
+[Entry #5]
+Username: guest | Is_admin: False
+New Email: longbinhquoitay8@gmail.com
+Birth Date: 2025-06-25
+Setting: dark_mode
+Password: long123
+Time: 25-06-2025 18:02:44
+---------------------------
+
+[Entry #6]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: light_mode
+Password:
+Time: 25-06-2025 18:07:50
+---------------------------
+
+[Entry #7]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: dark_mode
+Password:
+Time: 25-06-2025 18:10:57
+---------------------------
+
+[Entry #8]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: dark_mode
+Password:
+Time: 25-06-2025 18:11:13
+---------------------------
+
+[Entry #9]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: light_mode
+Password:
+Time: 25-06-2025 18:11:15
+---------------------------
+
+[Entry #10]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: dark_mode
+Password:
+Time: 25-06-2025 18:11:25
+---------------------------
+
+[Entry #11]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: light_mode
+Password:
+Time: 25-06-2025 18:13:08
+---------------------------
+
+[Entry #12]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: dark_mode
+Password:
+Time: 25-06-2025 18:13:12
+---------------------------
+
+[Entry #13]
+Username: guest | Is_admin: False
+New Email:
+Birth Date:
+Setting: light_mode
+Password:
+Time: 25-06-2025 18:13:16
+---------------------------
 ```
 
 ### `app\routes\__init__.py`
@@ -1222,9 +1320,8 @@ allow: /logout
 
 ### `app\static\styles\style1.css`
 ```css
-/* Bug-Bounty-Web — Responsive Compact Theme with Adjusted Font Scaling */
+/* Light Mode - Harmonized Version */
 
-/* Reset & Base */
 *, *::before, *::after {
   margin: 0;
   padding: 0;
@@ -1242,17 +1339,15 @@ html, body {
   align-items: center;
   padding: 20px;
   font-size: 16px;
-  visibility: hidden;
 }
 
-/* Card Wrapper */
 .card {
   width: 100%;
   max-width: 650px;
   background: #ffffff;
-  border: 1px solid #e0e6ed;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid #d3e3fc;
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgba(74, 144, 226, 0.2);
   overflow: hidden;
   padding: 25px;
   margin: 0 auto;
@@ -1262,38 +1357,73 @@ html, body {
 .card header {
   text-align: center;
   padding-bottom: 15px;
-  border-bottom: 1px solid #e0e6ed;
+  border-bottom: 1px solid #d3e3fc;
 }
 .card header h1 {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 5px;
+  color: #4a90e2;
 }
 .card header p {
   font-size: 1rem;
   color: #4a5568;
 }
 
-/* Main */
-.card main {
-  margin-top: 20px;
+/* Menu */
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 25px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* Profile Info */
-.card .profile-info {
-  background: #fafafa;
-  border: 1px solid #e0e6ed;
+.menu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #2d3e50;
+  font-weight: 500;
+  padding: 10px 15px;
+  border-radius: 8px;
+  background-color: #e3edf7;
+  transition: background 0.2s, color 0.2s;
+}
+
+.menu li a:hover {
+  background-color: #d0e2f0;
+  color: #4a90e2;
+}
+
+.menu li:last-child a {
+  background-color: #ffe5e5;
+  color: #e74c3c;
+}
+
+.menu li:last-child a:hover {
+  background-color: #fddede;
+  color: #c0392b;
+}
+
+/* Profile Info Box */
+.profile-info {
+  background: #f2f8fd;
+  border: 1px solid #d3e3fc;
   padding: 15px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-bottom: 20px;
   overflow-x: auto;
   word-break: break-word;
 }
-.card .profile-info p {
+.profile-info p {
   font-size: 1rem;
+  color: #2d3e50;
 }
 
-/* Form Styles */
+/* Form */
 .card form {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -1305,6 +1435,7 @@ html, body {
   font-size: 1rem;
   font-weight: 600;
   justify-self: end;
+  color: #4a4a4a;
 }
 .card form input {
   width: 100%;
@@ -1312,19 +1443,22 @@ html, body {
   border: 1px solid #c3cfe2;
   border-radius: 10px;
   font-size: 1rem;
+  background-color: #fff;
+  color: #2d3e50;
 }
 .card form input:focus {
   border-color: #4a90e2;
   outline: none;
-  box-shadow: 0 0 6px rgba(74,144,226,0.4);
+  box-shadow: 0 0 6px rgba(74, 144, 226, 0.4);
 }
 
+/* Button */
 .card button {
   grid-column: 2 / 3;
   width: 100%;
   padding: 14px;
   background: #4a90e2;
-  color: #fff;
+  color: #ffffff;
   font-size: 1.1rem;
   font-weight: 600;
   border: none;
@@ -1338,22 +1472,20 @@ html, body {
 }
 
 /* Result Box */
-.card .result-box {
+.result-box {
   background: #ffffff;
-  border: 1px solid #e0e6ed;
+  border: 1px solid #d3e3fc;
   padding: 15px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-top: 20px;
   overflow-x: auto;
   word-break: break-word;
 }
-.card .result-box .label {
+.result-box .label {
   font-weight: 600;
   display: inline-block;
   width: 120px;
-}
-.card .result-box .value, .card .result-box .error, .card .result-box .success {
-  font-size: 1rem;
+  color: #2d3e50;
 }
 
 /* Footer */
@@ -1382,32 +1514,62 @@ html, body {
     grid-column: auto;
   }
 }
+.card {
+  width: 100%;
+  max-width: 650px;
+  background: #ffffff;
+  border: 1px solid #d0d7de; /* viền sáng rõ */
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* bóng rõ ràng */
+  padding: 30px;
+  margin: 0 auto;
+  transition: box-shadow 0.3s ease;
+}
 .finance-info {
-  background-color: rgba(255, 255, 255, 0.05); /* nhẹ nhàng hơn, hài hòa với dark */
-  border: 1px solid #00ffa3;
+  background-color: #f9fbfd; /* nhẹ hơn trắng */
+  border: 1px solid #cbd6e2;
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 25px;
-  color: #1900ff; /* text cho rõ hơn */
+  color: #2d3e50;
 }
 
 .finance-info p {
-  color: #1900ff;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .finance-info strong {
-  color: #1900ff;
+  color: #2d3e50;
 }
 .navigation-links a {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid #00ffa3;
+  background-color: #f5f7fa;
+  border: 1px solid #d0d7de;
   border-radius: 8px;
-  padding: 12px 14px;
-  transition: background 0.2s ease-in-out;
+  padding: 10px 14px;
+  color: #2d3e50;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: background 0.2s ease;
 }
 
 .navigation-links a:hover {
-  background-color: rgba(0, 255, 163, 0.1);
+  background-color: #ffffff;
+}
+
+.navigation-links a:last-child {
+  border-color: #4a90e2;
+  color: #4a90e2;
+  background-color: #fdfdfd;
+}
+
+.navigation-links a:last-child:hover {
+  background-color: #ffffff;
 }
 ```
 
@@ -1433,7 +1595,6 @@ html, body {
   align-items: center;
   padding: 20px;
   font-size: 16px;
-  visibility: hidden;
 }
 
 /* Card Wrapper */
@@ -1662,13 +1823,17 @@ html, body {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
 </head>
 <body>
     <div class="card">
         <h1>Welcome to the Ebook Website</h1>
         <label><p class="info">Hi! If you have an account, you can <a href="/auth/login">Login</a></p></label>
         <label><p class="info">Don't have an account? No worries! You can <a href="/auth/register">Register</a> here.</p></label>
-        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1689,6 +1854,11 @@ html, body {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
 </head>
 <body>
     <div class="card">
@@ -1723,7 +1893,6 @@ html, body {
                 </a>
             </li>
         </ul>
-        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1744,6 +1913,11 @@ html, body {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <title>Control Panel Login</title>
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
 </head>
 <body>
     <div class="card">
@@ -1761,7 +1935,6 @@ html, body {
             <p style="color:royalblue;"> {{ error }}</p>
             {% endif %}
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
-        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1809,7 +1982,7 @@ html, body {
 
   <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
     <li>
-      <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+      <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
         <span class="material-icons">arrow_back</span> Back
       </a>
     </li>
@@ -1836,9 +2009,15 @@ html, body {
     <!-- Google Fonts & Material Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
+    <script src="{{ url_for('static', filename='script-js/get_information_admin.js') }}"></script>
 </head>
 <body>
-    <div class="card">
+    <div class="card" id="card" style="visibility: hidden;">
         {% if username %}
         <h1>Profile {{ username }}</h1>
         {% endif %}
@@ -1847,7 +2026,7 @@ html, body {
 
         <ul style="list-style: none; padding: 0; margin-top: 20px;">
           <li style="margin-bottom: 12px;">
-              <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+              <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
                   <span class="material-icons">arrow_back</span> Back
               </a>
           </li>
@@ -1861,9 +2040,6 @@ html, body {
             &copy; 2025 TheWindGhost
         </footer>
     </div>
-
-    <script src="/static/script-js/get_information_admin.js"></script>
-    <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>
 ```
@@ -1877,6 +2053,11 @@ html, body {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
     <title>Login</title>
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
 </head>
 <body>
     <div class="card">
@@ -1895,7 +2076,6 @@ html, body {
             {% endif %}
         <p>Don't have an account? <a href="/auth/register">Register Here</a></p>
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
-        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1913,6 +2093,11 @@ html, body {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>Redirecting ...</title>
+  <script>
+    const style = localStorage.getItem('style') || 'light_mode';
+    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+    document.write(`<link rel="stylesheet" href="${css}">`);
+  </script>
 </head>
 <body>
   <div class="card">
@@ -1940,7 +2125,6 @@ html, body {
 
   </script>
   {% endif %}
-  <script src="/static/script-js/load_style.js"></script>
 
 </body>
 </html>
@@ -1954,6 +2138,11 @@ html, body {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <script>
+    const style = localStorage.getItem('style') || 'light_mode';
+    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+    document.write(`<link rel="stylesheet" href="${css}">`);
+  </script>
   <title>Registration Form</title>
 </head>
 <body>
@@ -2008,7 +2197,6 @@ html, body {
       </section>
 
     </main>
-    <script src="/static/script-js/load_style.js"></script>
     <!-- Footer -->
     <footer>
       &copy; 2025 TheWindGhost
@@ -2026,6 +2214,11 @@ html, body {
     <title>Reset Password</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -2043,7 +2236,6 @@ html, body {
             <p>{{ Notification }}</p>
             {% endif %}
         </form>
-        <script src="/static/script-js/load_style.js"></script>
     <!-- Footer -->
     <footer>
         &copy; 2025 TheWindGhost
@@ -2066,6 +2258,11 @@ html, body {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
 </head>
 <body>
     <div class="card">
@@ -2081,7 +2278,6 @@ html, body {
             {% endif %}
         </form>
     </div>
-    <script src="/static/script-js/load_style.js"></script>
     <!-- Footer -->
     <footer>
         &copy; 2025 TheWindGhost
@@ -2099,6 +2295,12 @@ html, body {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>403 Forbidden</title>
+  <script>
+    const style = localStorage.getItem('style') || 'light_mode';
+    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+    document.write(`<link rel="stylesheet" href="${css}">`);
+  </script>
+  <script src="{{ url_for('static', filename='script-js/redirect_referer.js') }}"></script>
 </head>
 <body>
   <div class="card">
@@ -2109,9 +2311,6 @@ html, body {
       &copy; 2025 TheWindGhost
     </footer>
   </div>
-
-  <script src="/static/script-js/redirect_referer.js"></script>
-  <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>
 ```
@@ -2131,6 +2330,12 @@ html, body {
 
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    const style = localStorage.getItem('style') || 'light_mode';
+    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+    document.write(`<link rel="stylesheet" href="${css}">`);
+  </script>
+  <script src="{{ url_for('static', filename='script-js/get_balance_user.js') }}" defer></script>
 
 </head>
 <body>
@@ -2188,9 +2393,6 @@ html, body {
       </ul>
     </nav>
 
-    <script src="/static/script-js/get_balance_user.js"></script>
-    <script src="/static/script-js/load_style.js"></script>
-
     <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
       &copy; 2025 TheWindGhost
     </footer>
@@ -2208,14 +2410,20 @@ html, body {
     <title>Profile</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <!-- Google Fonts -->
-     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-     <!-- Material Icons -->
-     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
+    <script src="{{ url_for('static', filename='script-js/get_information_user.js') }}"></script>
 </head>
 <body>
-    <div class="card">
+    <div class="card" id="card" style="visibility: hidden;">
         {% if template_rendered %}
         <h1>Profile {{ template_rendered }}</h1>
         {% endif %}
@@ -2224,7 +2432,7 @@ html, body {
 
         <ul style="list-style: none; padding: 0; margin-top: 20px;">
           <li style="margin-bottom: 12px;">
-              <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+              <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
                   <span class="material-icons">arrow_back</span> Back
               </a>
           </li>
@@ -2234,14 +2442,11 @@ html, body {
               </a>
           </li>
         </ul>
-
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
     </div>
 
-    <script src="/static/script-js/get_information_user.js"></script>
-    <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>
 ```
@@ -2258,6 +2463,17 @@ html, body {
   <!-- Google Fonts & Material Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <script>
+    (function(){
+      const mode = localStorage.getItem('style') || 'light_mode';
+      const href = mode === 'dark_mode'
+        ? '/static/styles/style2.css'
+        : '/static/styles/style1.css';
+      document.write(`<link rel="stylesheet" id="theme-stylesheet" href="${href}">`);
+    })();
+  </script>
+
+  <script src="{{ url_for('static', filename='script-js/update_setting_user.js') }}"></script>
 </head>
 <body>
   <div class="card">
@@ -2299,7 +2515,7 @@ html, body {
 
     <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
       <li>
-        <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+        <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
           <span class="material-icons">arrow_back</span> Back
         </a>
       </li>
@@ -2315,8 +2531,6 @@ html, body {
     </footer>
   </div>
 
-  <script src="/static/script-js/update_setting_user.js"></script>
-  <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>
 ```
@@ -2334,13 +2548,18 @@ html, body {
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    const style = localStorage.getItem('style') || 'light_mode';
+    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+    document.write(`<link rel="stylesheet" href="${css}">`);
+  </script>
 </head>
 <body>
 
   <div class="card">
     <h2 style="font-size: 1.8rem; text-align: center; margin-bottom: 20px;">Update Your Balance</h2>
 
-    <form action="/user/balances" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+    <form action="/user/wallet" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
       <label for="balance" style="font-weight: 600;">Enter New Balance</label>
       <input type="text" id="balance" name="balance" class="balance-input" required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
 
@@ -2361,7 +2580,7 @@ html, body {
 
     <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
       <li>
-        <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+        <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
           <span class="material-icons">arrow_back</span> Back
         </a>
       </li>
@@ -2371,8 +2590,6 @@ html, body {
         </a>
       </li>
     </ul>
-
-    <script src="/static/script-js/load_style.js"></script>
 
     <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
       &copy; 2025 TheWindGhost

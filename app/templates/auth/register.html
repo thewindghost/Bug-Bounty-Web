@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <script>
+    const style = localStorage.getItem('style') || 'light_mode';
+    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+    document.write(`<link rel="stylesheet" href="${css}">`);
+  </script>
   <title>Registration Form</title>
 </head>
 <body>
@@ -58,7 +63,6 @@
       </section>
 
     </main>
-    <script src="/static/script-js/load_style.js"></script>
     <!-- Footer -->
     <footer>
       &copy; 2025 TheWindGhost

@@ -1,5 +1,9 @@
+document.addEventListener("DOMContentLoaded", fetchProfileData);
+
 async function fetchProfileData() {
     const resultBox = document.getElementById('result');
+    const card = document.getElementById('card');
+
     try {
       const res = await fetch('/api/v1/information_admin', {
         method: 'GET',
@@ -11,6 +15,7 @@ async function fetchProfileData() {
 
       if (res.ok) {
         const u = json.user_data;
+
         resultBox.innerHTML = `
           <strong>ID:</strong> ${u.id}<br>
           <strong>Username:</strong> ${u.username}<br>
@@ -30,6 +35,8 @@ async function fetchProfileData() {
       }
     } catch (err) {
       resultBox.innerHTML = `<span class="error">Không thể kết nối đến server.</span>`;
+    } finally {
+      card.style.visibility = 'visible';
     }
   }
 

@@ -1,23 +1,23 @@
 from flask import Blueprint, render_template, request, session, render_template_string
 from bleach import clean
 from app.utils.decorator_user import user_required
-from app.controllers.user.xml_parser import handle_parser_info
+from app.controllers.user.update_setting import handle_setting_user
 from app.controllers.user.update_balance import update_balance_user
 
 user_bp = Blueprint('user', __name__)
 
-@user_bp.route('/parser-info', methods=['GET', 'POST'])
+@user_bp.route('/setting', methods=['GET', 'POST'])
 @user_required
-def parser_info():
+def user_parser_info():
     
     if request.method == 'POST':
-        return handle_parser_info()
+        return handle_setting_user()
     
-    return render_template('user/parser_info.html')
+    return render_template('user/setting_user.html')
 
 @user_bp.route('/balances', methods=['GET', 'POST'])
 @user_required
-def update_balance():
+def user_update_balance():
     
     if request.method == 'POST':
         return update_balance_user()
@@ -26,12 +26,12 @@ def update_balance():
 
 @user_bp.route('/profile', methods=['GET', 'POST'])
 @user_required
-def profile():
+def user_profile():
 
-    return render_template('user/profile_user.html', template_rendered=clean(render_template_string(session['username'])))
+    return render_template('user/profile_user.html', template_rendered=session['username'])
 
 @user_bp.route('/dashboard', methods=['GET'])
 @user_required
-def dashboard():
+def user_dashboard():
 
     return render_template('user/dashboard.html', username=session['username'])

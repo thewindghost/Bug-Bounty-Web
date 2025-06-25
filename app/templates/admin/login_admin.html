@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <title>Control Panel Login</title>
-    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="card">
@@ -23,6 +25,16 @@
             <p style="color:royalblue;"> {{ error }}</p>
             {% endif %}
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+        <script>
+            (function () {
+              const style = localStorage.getItem('style') || 'light_mode';
+              const link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.onload = () => document.body.style.visibility = 'visible';
+              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
+              document.head.appendChild(link);
+            })();
+          </script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>

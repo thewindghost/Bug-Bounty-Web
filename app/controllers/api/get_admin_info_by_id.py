@@ -25,7 +25,14 @@ def get_information_admin():
                 "id": row["id"],
                 "username": row["username"],
                 "password": row["password"],
-                "email": row["email"]
+                "email": row["email"],
+                'first_name': row['first_name'],
+                'last_name': row['last_name'],
+                'number_phone': row['number_phone'],
+                'website_company': row['website_company'],
+                'birth_date': row['birth_date'],
+                'is_admin': row['is_admin'],
+                'created_at': row['created_at']
             }
             return jsonify({"admin_data": admin_data}), 200
         else:

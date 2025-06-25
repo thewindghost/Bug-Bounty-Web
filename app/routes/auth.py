@@ -26,11 +26,7 @@ def login():
         if row and check_password_hash(row[2], raw_password):
             session['username'] = row[0]
             session['is_admin'] = bool(row[1])
-            
-            if session.get('is_admin') == True:
-                return redirect(url_for('admin.admin_panel'))
-            else:
-                return redirect(url_for('user.dashboard'))
+            return redirect(url_for('user.user_dashboard'))
         
         else:
             error = "Invalid Username or Password"

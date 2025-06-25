@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Logs File</title>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <link rel='icon' href='/static/favicon.ico' type='image/x-icon' />
+  <link href='https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap' rel='stylesheet' />
+  <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet' />
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #121212;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+    .entry {
+      background: #1e1e1e;
+      border: 1px solid #00ffa3;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Logs File</h1>
+
+  {% for entry in entries %}
+    <div class="entry">{{ entry }}</div>
+  {% else %}
+    <p>No logs found.</p>
+  {% endfor %}
+
+  <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
+    <li>
+      <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+        <span class="material-icons">arrow_back</span> Back
+      </a>
+    </li>
+    <li>
+      <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #e74c3c; font-weight: 600;">
+        <span class="material-icons">logout</span> Logout
+      </a>
+    </li>
+  </ul>
+</body>
+</html>

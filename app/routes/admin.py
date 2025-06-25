@@ -13,7 +13,7 @@ def admin_login():
     
     return render_template('admin/login_admin.html')
 
-@admin_bp.route('/dashboard', methods=['GET', 'POST'])
+@admin_bp.route('/control-panel', methods=['GET', 'POST'])
 @admin_required
 def admin_panel():
 

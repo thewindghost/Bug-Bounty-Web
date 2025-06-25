@@ -18,4 +18,4 @@ USER Bug_Hunter
 EXPOSE 5505
 
 # WSGI entrypoint
-CMD ["gunicorn", "-w 1", "--bind", "127.0.0.1:5505", "wsgi:app"]
+CMD ["gunicorn", "-w 1", "--bind", "0.0.0.0:5505", "wsgi:app"]

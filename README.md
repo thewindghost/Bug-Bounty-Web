@@ -47,6 +47,7 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
 ## 📁 Project Structure
 
 ```text
+├── .dockerignore
 ├── .env.example
 ├── .gitattributes
 ├── .gitignore

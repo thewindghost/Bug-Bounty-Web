@@ -66,6 +66,7 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   │   ├── check_login.py
     │   │   └── read_logs.py
     │   ├── api/
+    │   │   ├── clear_logs_admin.py
     │   │   ├── get_admin_info_by_post.py
     │   │   ├── get_current_admin_info_id.py
     │   │   ├── get_current_user_info_id.py
@@ -99,6 +100,7 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     ├── static/
     │   ├── robots.txt
     │   ├── script-js/
+    │   │   ├── clear_logs_admin.js
     │   │   ├── get_balance_user.js
     │   │   ├── get_information_admin.js
     │   │   ├── get_information_user.js
@@ -336,6 +338,29 @@ def read_logs_info():
         return f"Error reading logs: {str(e)}", 500
 ```
 
+### `app\controllers\api\clear_logs_admin.py`
+```python
+from flask import jsonify
+from app.config import Config
+import os
+
+def clear_logs_admin():
+
+    try:
+        log_file = Config.LOG_FILE_RELATIVE_PATH
+
+        if not os.path.exists(log_file):
+            return jsonify({"status": "error", "message": "Log file not found."}), 404
+
+        open(log_file, 'w').close()
+
+        return jsonify({"status": "success", "message": "Logs cleared successfully."}), 200
+
+    except Exception as e:
+        e = "Internal Server Error"
+        return jsonify({"status": "error", "message": str(e)}), 500
+```
+
 ### `app\controllers\api\get_admin_info_by_post.py`
 ```python
 import sqlite3
@@ -558,7 +583,7 @@ def handle_setting_user():
         if encoding.lower() != 'utf-8':
             return render_template('user/setting_user.html', error=f"Only UTF-8 is allowed. Got: {encoding}")
 
-        update_setting_V1 = etree.XMLParser(resolve_entities=True, load_dtd=True, no_network=False)
+        update_setting_V1 = etree.XMLParser(resolve_entities=True, load_dtd=False, no_network=False)
         root_V1 = etree.fromstring(raw_data, parser=update_setting_V1)
         update_setting_V2 = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
         root_V2 = etree.fromstring(raw_data, parser=update_setting_V2)
@@ -763,123 +788,6 @@ server {
 
 ### `app\logs\logs.txt`
 ```text
-
-[Entry #1]
-Username: longtruong | Is_admin: False
-New Email:
-Birth Date:
-Setting: light_mode
-Password:
-Time: 25-06-2025 11:55:34
----------------------------
-
-[Entry #2]
-Username: longtruong | Is_admin: False
-New Email:
-Birth Date:
-Setting: dark_mode
-Password:
-Time: 25-06-2025 11:56:06
----------------------------
-
-[Entry #3]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: dark_mode
-Password:
-Time: 25-06-2025 18:02:31
----------------------------
-
-[Entry #4]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: light_mode
-Password:
-Time: 25-06-2025 18:02:35
----------------------------
-
-[Entry #5]
-Username: guest | Is_admin: False
-New Email: longbinhquoitay8@gmail.com
-Birth Date: 2025-06-25
-Setting: dark_mode
-Password: long123
-Time: 25-06-2025 18:02:44
----------------------------
-
-[Entry #6]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: light_mode
-Password:
-Time: 25-06-2025 18:07:50
----------------------------
-
-[Entry #7]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: dark_mode
-Password:
-Time: 25-06-2025 18:10:57
----------------------------
-
-[Entry #8]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: dark_mode
-Password:
-Time: 25-06-2025 18:11:13
----------------------------
-
-[Entry #9]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: light_mode
-Password:
-Time: 25-06-2025 18:11:15
----------------------------
-
-[Entry #10]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: dark_mode
-Password:
-Time: 25-06-2025 18:11:25
----------------------------
-
-[Entry #11]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: light_mode
-Password:
-Time: 25-06-2025 18:13:08
----------------------------
-
-[Entry #12]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: dark_mode
-Password:
-Time: 25-06-2025 18:13:12
----------------------------
-
-[Entry #13]
-Username: guest | Is_admin: False
-New Email:
-Birth Date:
-Setting: light_mode
-Password:
-Time: 25-06-2025 18:13:16
----------------------------
 ```
 
 ### `app\routes\__init__.py`
@@ -929,6 +837,7 @@ from app.controllers.api.get_admin_info_by_post import get_information_admin
 from app.controllers.api.get_user_info_by_post import get_user_info_by_id
 from app.controllers.api.get_current_user_info_id import get_current_user_info
 from app.controllers.api.get_current_admin_info_id import get_current_admin_info
+from app.controllers.api.clear_logs_admin import clear_logs_admin
 from app.utils.decorator_admin import admin_required
 from app.utils.decorator_user import user_required
 
@@ -952,6 +861,11 @@ def information_admin():
         return get_information_admin()
 
     return get_current_admin_info()
+
+@api_bp.route('/v1/clear_logs', methods=['POST'])
+def clear_logs():
+
+    return clear_logs_admin()
 ```
 
 ### `app\routes\auth.py`
@@ -1935,11 +1849,11 @@ html, body {
 <html lang="en">
 <head>
   <title>Logs File</title>
-  <meta charset='UTF-8' />
-  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-  <link rel='icon' href='/static/favicon.ico' type='image/x-icon' />
-  <link href='https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap' rel='stylesheet' />
-  <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet' />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <style>
     body {
       font-family: 'Courier New', monospace;
@@ -1955,6 +1869,42 @@ html, body {
       margin-bottom: 15px;
       white-space: pre-wrap;
     }
+    .action-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 25px;
+    }
+    .action-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 6px;
+      background-color: #1e1e1e;
+      border: 1px solid #4a90e2;
+      color: #4a90e2;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .action-button:hover {
+      background: #2a2a2a;
+    }
+    .logout-button {
+      border-color: #e74c3c;
+      color: #e74c3c;
+    }
+    .logout-button:hover {
+      background: #2a2a2a;
+    }
+    .clear-button {
+      border-color: #00ffa3;
+      color: #00ffa3;
+    }
+    .clear-button:hover {
+      background: #1b2a24;
+    }
   </style>
 </head>
 <body>
@@ -1966,18 +1916,19 @@ html, body {
     <p>No logs found.</p>
   {% endfor %}
 
-  <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
-    <li>
-      <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
-        <span class="material-icons">arrow_back</span> Back
-      </a>
-    </li>
-    <li>
-      <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #e74c3c; font-weight: 600;">
-        <span class="material-icons">logout</span> Logout
-      </a>
-    </li>
-  </ul>
+  <div class="action-buttons">
+    <a href="javascript:window.location.href = document.referrer" class="action-button">
+      <span class="material-icons">arrow_back</span> Back
+    </a>
+    <a href="/auth/logout?running=True" class="action-button logout-button">
+      <span class="material-icons">logout</span> Logout
+    </a>
+    <button class="action-button clear-button" onclick="clearLogs()">
+      <span class="material-icons">delete</span> Clear Logs
+    </button>
+  </div>
+
+  <script src="/static/script-js/clear_logs_admin.js"></script>
 </body>
 </html>
 ```

@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <title>Logs File</title>
-  <meta charset='UTF-8' />
-  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-  <link rel='icon' href='/static/favicon.ico' type='image/x-icon' />
-  <link href='https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap' rel='stylesheet' />
-  <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet' />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <style>
     body {
       font-family: 'Courier New', monospace;
@@ -22,6 +22,42 @@
       margin-bottom: 15px;
       white-space: pre-wrap;
     }
+    .action-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 25px;
+    }
+    .action-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 6px;
+      background-color: #1e1e1e;
+      border: 1px solid #4a90e2;
+      color: #4a90e2;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .action-button:hover {
+      background: #2a2a2a;
+    }
+    .logout-button {
+      border-color: #e74c3c;
+      color: #e74c3c;
+    }
+    .logout-button:hover {
+      background: #2a2a2a;
+    }
+    .clear-button {
+      border-color: #00ffa3;
+      color: #00ffa3;
+    }
+    .clear-button:hover {
+      background: #1b2a24;
+    }
   </style>
 </head>
 <body>
@@ -33,17 +69,18 @@
     <p>No logs found.</p>
   {% endfor %}
 
-  <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
-    <li>
-      <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
-        <span class="material-icons">arrow_back</span> Back
-      </a>
-    </li>
-    <li>
-      <a href="/auth/logout?running=True" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #e74c3c; font-weight: 600;">
-        <span class="material-icons">logout</span> Logout
-      </a>
-    </li>
-  </ul>
+  <div class="action-buttons">
+    <a href="javascript:window.location.href = document.referrer" class="action-button">
+      <span class="material-icons">arrow_back</span> Back
+    </a>
+    <a href="/auth/logout?running=True" class="action-button logout-button">
+      <span class="material-icons">logout</span> Logout
+    </a>
+    <button class="action-button clear-button" onclick="clearLogs()">
+      <span class="material-icons">delete</span> Clear Logs
+    </button>
+  </div>
+
+  <script src="/static/script-js/clear_logs_admin.js"></script>
 </body>
 </html>

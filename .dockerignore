@@ -8,11 +8,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Env & secrets
-*.pem
-*.key
-*.crt
-
 # OS/Editor
 .DS_Store
 .vscode/

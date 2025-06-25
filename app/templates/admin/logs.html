@@ -58,10 +58,18 @@
     .clear-button:hover {
       background: #1b2a24;
     }
+    h1 {
+      color: #00ffa3;
+      text-shadow: 0 0 8px #00ffa3;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>Logs File</h1>
+  <h1 style="color: #00ffa3; text-shadow: 0 0 8px #00ffa3; font-weight: 700; margin-bottom: 20px;">
+    Logs File
+  </h1>
 
   {% for entry in entries %}
     <div class="entry">{{ entry }}</div>

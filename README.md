@@ -80,7 +80,6 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     ├── http/
     │   ├── nginx.conf
     │   └── ssl/
-    │       └── server.cert
     ├── logs/
     │   └── logs.txt
     ├── routes/
@@ -751,26 +750,13 @@ def initialize_database(database_path):
 ```config
 server {
     listen 80;
-    server_name localhost; # change domain in here if you have domain
+    server_name _;
 
     location / {
         proxy_pass http://bug_bounty_web:5505;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-
-server {
-    listen 443 ssl;
-    server_name localhost; # change domain in here if you have domain
-
-    ssl_certificate     /etc/nginx/ssl/fake-cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/fake-key.pem;
-
-    location / {
-        proxy_pass http://bug_bounty_web:5505;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 }
 ```

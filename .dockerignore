@@ -1,0 +1,49 @@
+# Git & VCS
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Env & secrets
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# OS/Editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Test data & logs
+*.log
+*.sqlite3
+*.db
+*.pid
+.coverage
+htmlcov/
+
+# Virtualenv
+venv/
+env/
+.venv/
+
+# Byte-compiled, coverage, and testing stuff
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.cache/
+
+# Docker ignore itself (optional)
+.dockerignore

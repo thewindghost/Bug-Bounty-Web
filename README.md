@@ -752,7 +752,7 @@ def initialize_database(database_path):
 ```config
 server {
     listen 80;
-    server_name _; change domain in here if you have domain
+    server_name localhost; # change domain in here if you have domain
 
     location / {
         proxy_pass http://bug_bounty_web:5505;
@@ -763,7 +763,7 @@ server {
 
 server {
     listen 443 ssl;
-    server_name _; # change domain in here if you have domain
+    server_name localhost; # change domain in here if you have domain
 
     ssl_certificate     /etc/nginx/ssl/fake-cert.pem;
     ssl_certificate_key /etc/nginx/ssl/fake-key.pem;

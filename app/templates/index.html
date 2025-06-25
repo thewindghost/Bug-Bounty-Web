@@ -11,16 +11,7 @@
         <h1>Welcome to the Ebook Website</h1>
         <label><p class="info">Hi! If you have an account, you can <a href="/auth/login">Login</a></p></label>
         <label><p class="info">Don't have an account? No worries! You can <a href="/auth/register">Register</a> here.</p></label>
-        <script>
-            (function () {
-              const style = localStorage.getItem('style') || 'light_mode';
-              const link = document.createElement('link');
-              link.rel = 'stylesheet';
-              link.onload = () => document.body.style.visibility = 'visible';
-              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-              document.head.appendChild(link);
-            })();
-          </script>
+        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>

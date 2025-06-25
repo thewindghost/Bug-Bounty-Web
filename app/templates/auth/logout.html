@@ -17,14 +17,6 @@
   </div>
   {% if running %}
   <script>
-    (function () {
-      const style = localStorage.getItem('style') || 'light_mode';
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.onload = () => document.body.style.visibility = 'visible';
-      link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-      document.head.appendChild(link);
-    })();
     let countdown = 5;
     const countdownSpan = document.getElementById('countdown');
 
@@ -40,6 +32,7 @@
     
   </script>
   {% endif %}
+  <script src="/static/script-js/load_style.js"></script>
 
 </body>
 </html>

@@ -33,6 +33,7 @@ def get_user_info_by_id():
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
                 'is_admin': row['is_admin'],
+                'balance': row['balance'],
                 'created_at': row['created_at']
             }
             return jsonify({"user_data": user_data}), 200

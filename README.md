@@ -98,8 +98,16 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   └── write_log_entries.py
     ├── static/
     │   ├── robots.txt
-    │   ├── style2.css
-    │   └── styles.css
+    │   ├── script-js/
+    │   │   ├── get_balance_user.js
+    │   │   ├── get_information_admin.js
+    │   │   ├── get_information_user.js
+    │   │   ├── load_style.js
+    │   │   ├── redirect_referer.js
+    │   │   └── update_setting_user.js
+    │   └── styles/
+    │       ├── style1.css
+    │       └── style2.css
     ├── templates/
     │   ├── admin/
     │   │   ├── control_panel.html
@@ -365,6 +373,7 @@ def get_information_admin():
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
                 'is_admin': row['is_admin'],
+                'balance': row['balance'],
                 'created_at': row['created_at']
             }
             return jsonify({"admin_data": admin_data}), 200
@@ -406,6 +415,7 @@ def get_current_admin_info():
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
                 'is_admin': row['is_admin'],
+                'balance': row['balance'],
                 'created_at': row['created_at']
             }
             return jsonify({"user_data": admin_data}), 200
@@ -447,6 +457,7 @@ def get_current_user_info():
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
                 'is_admin': row['is_admin'],
+                'balance': row['balance'],
                 'created_at': row['created_at']
             }
             return jsonify({"user_data": user_data}), 200
@@ -494,6 +505,7 @@ def get_user_info_by_id():
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
                 'is_admin': row['is_admin'],
+                'balance': row['balance'],
                 'created_at': row['created_at']
             }
             return jsonify({"user_data": user_data}), 200
@@ -517,7 +529,7 @@ def update_balance_user():
             return render_template('user/wallet.html', result=balance)
 
     except Exception as e:
-            error = str(e)
+            error = 'Internal Server error', 500
             return render_template('user/wallet.html', error=error)
 ```
 
@@ -552,7 +564,8 @@ def handle_setting_user():
         update_setting_V2 = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
         root_V2 = etree.fromstring(raw_data, parser=update_setting_V2)
 
-        username = clean(render_template_string(session.get("username")))
+        #username = clean(render_template_string(session.get("username")))
+        username = session.get("username")
         is_admin = session.get("is_admin")
         new_email = root_V2.findtext("email")
         new_birth_date = root_V2.findtext("birth_date")
@@ -590,7 +603,8 @@ def handle_setting_user():
         return render_template("user/setting_user.html", success="Your settings were updated.")
 
     except Exception as e:
-        return render_template("user/setting_user.html", error=f"Error while parsing XML: {str(e)}")
+        e = "Internal Server Error", 500
+        return render_template("user/setting_user.html", error=e)
 ```
 
 ### `app\database\__init__.py`
@@ -677,6 +691,7 @@ def initialize_database(database_path):
         website_company TEXT NOT NULL,
         birth_date DATE NOT NULL,
         is_admin INTEGER DEFAULT 0,
+        balance FLOAT DEFAULT 10.00,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
@@ -696,6 +711,7 @@ def initialize_database(database_path):
         website_company TEXT NOT NULL,
         birth_date DATE NOT NULL,
         is_admin INTEGER DEFAULT 1,
+        balance FLOAT DEFAULT 1000.00,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
@@ -708,22 +724,23 @@ def initialize_database(database_path):
     admin_pass = generate_password_hash("admin123")
     guest_pass = generate_password_hash("guest123")
 
-    # Thêm admin: root, admin
-    curr.execute('''
-    INSERT OR IGNORE INTO admins (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("root", root_pass, "root@example.com", "Root", "User", "092316186", "coding.example.com", "1990-03-11", 1))
+    users_data = [
+        ("guest", guest_pass, "guest@example.com", "Guest", "User", "095358553", "example.com", "1990-03-11", 0, 10.00)
+    ]
+    admins_data = [
+        ("root", root_pass, "root@example.com", "Root", "User", "092316186", "coding.example.com", "1990-03-11", 1, 1000.00),
+        ("admin", admin_pass, "admin@example.com", "Admin", "User", "098285213", "labs.example.com", "1990-03-11", 1, 1000.00)
+    ]
 
-    curr.execute('''
-    INSERT OR IGNORE INTO admins (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("admin", admin_pass, "admin@example.com", "Admin", "User", "098285213", "labs.example.com", "1990-03-11", 1))
+    curr.executemany('''
+        INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin, balance)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', users_data)
 
-    # Thêm user: guest
-    curr.execute('''
-    INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ("guest", guest_pass, "guest@example.com", "Guest", "User", "095358553", "example.com", "1990-03-11", 0))
+    curr.executemany('''
+        INSERT OR IGNORE INTO admins (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin, balance)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', admins_data)
 
     # Lưu và đóng DB
     conn.commit()
@@ -1053,7 +1070,7 @@ def index():
 
 ### `app\routes\user.py`
 ```python
-from flask import Blueprint, render_template, request, session, render_template_string
+from flask import Blueprint, render_template, request, session
 from bleach import clean
 from app.utils.decorator_user import user_required
 from app.controllers.user.update_setting import handle_setting_user
@@ -1070,12 +1087,13 @@ def user_parser_info():
 
     return render_template('user/setting_user.html')
 
-@user_bp.route('/balances', methods=['GET', 'POST'])
+@user_bp.route('/wallet', methods=['GET', 'POST'])
 @user_required
 def user_update_balance():
 
     if request.method == 'POST':
-        return update_balance_user()
+        error = "Sorry Code Backend Not Found"
+        return render_template('user/wallet.html', error=error)
 
     return render_template('user/wallet.html')
 
@@ -1201,7 +1219,198 @@ allow: /reset-password
 allow: /logout
 ```
 
-### `app\static\style2.css`
+### `app\static\styles\style1.css`
+```css
+/* Bug-Bounty-Web — Responsive Compact Theme with Adjusted Font Scaling */
+
+/* Reset & Base */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  width: 100%;
+  min-height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background: #f7f9fc;
+  color: #2d3e50;
+  line-height: 1.5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  font-size: 16px;
+  visibility: hidden;
+}
+
+/* Card Wrapper */
+.card {
+  width: 100%;
+  max-width: 650px;
+  background: #ffffff;
+  border: 1px solid #e0e6ed;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  padding: 25px;
+  margin: 0 auto;
+}
+
+/* Header */
+.card header {
+  text-align: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e6ed;
+}
+.card header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.card header p {
+  font-size: 1rem;
+  color: #4a5568;
+}
+
+/* Main */
+.card main {
+  margin-top: 20px;
+}
+
+/* Profile Info */
+.card .profile-info {
+  background: #fafafa;
+  border: 1px solid #e0e6ed;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  word-break: break-word;
+}
+.card .profile-info p {
+  font-size: 1rem;
+}
+
+/* Form Styles */
+.card form {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px 30px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.card form label {
+  font-size: 1rem;
+  font-weight: 600;
+  justify-self: end;
+}
+.card form input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #c3cfe2;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+.card form input:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 6px rgba(74,144,226,0.4);
+}
+
+.card button {
+  grid-column: 2 / 3;
+  width: 100%;
+  padding: 14px;
+  background: #4a90e2;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+.card button:hover {
+  background: #357ab8;
+}
+
+/* Result Box */
+.card .result-box {
+  background: #ffffff;
+  border: 1px solid #e0e6ed;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 20px;
+  overflow-x: auto;
+  word-break: break-word;
+}
+.card .result-box .label {
+  font-weight: 600;
+  display: inline-block;
+  width: 120px;
+}
+.card .result-box .value, .card .result-box .error, .card .result-box .success {
+  font-size: 1rem;
+}
+
+/* Footer */
+.card footer {
+  text-align: center;
+  padding: 15px;
+  font-size: 0.95rem;
+  color: #7a7a7a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    max-width: 95%;
+    padding: 20px;
+  }
+  .card form {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .card form label {
+    justify-self: start;
+  }
+  .card button {
+    width: 100%;
+    grid-column: auto;
+  }
+}
+.finance-info {
+  background-color: rgba(255, 255, 255, 0.05); /* nhẹ nhàng hơn, hài hòa với dark */
+  border: 1px solid #00ffa3;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 25px;
+  color: #1900ff; /* text cho rõ hơn */
+}
+
+.finance-info p {
+  color: #1900ff;
+}
+
+.finance-info strong {
+  color: #1900ff;
+}
+.navigation-links a {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #00ffa3;
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: background 0.2s ease-in-out;
+}
+
+.navigation-links a:hover {
+  background-color: rgba(0, 255, 163, 0.1);
+}
+```
+
+### `app\static\styles\style2.css`
 ```css
 /* Bug-Bounty-Web — Dark Mode Theme with Responsive Layout */
 
@@ -1443,197 +1652,6 @@ html, body {
 }
 ```
 
-### `app\static\styles.css`
-```css
-/* Bug-Bounty-Web — Responsive Compact Theme with Adjusted Font Scaling */
-
-/* Reset & Base */
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-html, body {
-  width: 100%;
-  min-height: 100%;
-  font-family: 'Roboto', sans-serif;
-  background: #f7f9fc;
-  color: #2d3e50;
-  line-height: 1.5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  font-size: 16px;
-  visibility: hidden;
-}
-
-/* Card Wrapper */
-.card {
-  width: 100%;
-  max-width: 650px;
-  background: #ffffff;
-  border: 1px solid #e0e6ed;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  overflow: hidden;
-  padding: 25px;
-  margin: 0 auto;
-}
-
-/* Header */
-.card header {
-  text-align: center;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #e0e6ed;
-}
-.card header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-.card header p {
-  font-size: 1rem;
-  color: #4a5568;
-}
-
-/* Main */
-.card main {
-  margin-top: 20px;
-}
-
-/* Profile Info */
-.card .profile-info {
-  background: #fafafa;
-  border: 1px solid #e0e6ed;
-  padding: 15px;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  overflow-x: auto;
-  word-break: break-word;
-}
-.card .profile-info p {
-  font-size: 1rem;
-}
-
-/* Form Styles */
-.card form {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 20px 30px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.card form label {
-  font-size: 1rem;
-  font-weight: 600;
-  justify-self: end;
-}
-.card form input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #c3cfe2;
-  border-radius: 10px;
-  font-size: 1rem;
-}
-.card form input:focus {
-  border-color: #4a90e2;
-  outline: none;
-  box-shadow: 0 0 6px rgba(74,144,226,0.4);
-}
-
-.card button {
-  grid-column: 2 / 3;
-  width: 100%;
-  padding: 14px;
-  background: #4a90e2;
-  color: #fff;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-top: 10px;
-}
-.card button:hover {
-  background: #357ab8;
-}
-
-/* Result Box */
-.card .result-box {
-  background: #ffffff;
-  border: 1px solid #e0e6ed;
-  padding: 15px;
-  border-radius: 6px;
-  margin-top: 20px;
-  overflow-x: auto;
-  word-break: break-word;
-}
-.card .result-box .label {
-  font-weight: 600;
-  display: inline-block;
-  width: 120px;
-}
-.card .result-box .value, .card .result-box .error, .card .result-box .success {
-  font-size: 1rem;
-}
-
-/* Footer */
-.card footer {
-  text-align: center;
-  padding: 15px;
-  font-size: 0.95rem;
-  color: #7a7a7a;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .card {
-    max-width: 95%;
-    padding: 20px;
-  }
-  .card form {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-  .card form label {
-    justify-self: start;
-  }
-  .card button {
-    width: 100%;
-    grid-column: auto;
-  }
-}
-.finance-info {
-  background-color: rgba(255, 255, 255, 0.05); /* nhẹ nhàng hơn, hài hòa với dark */
-  border: 1px solid #00ffa3;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 25px;
-  color: #1900ff; /* text cho rõ hơn */
-}
-
-.finance-info p {
-  color: #1900ff;
-}
-
-.finance-info strong {
-  color: #1900ff;
-}
-.navigation-links a {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid #00ffa3;
-  border-radius: 8px;
-  padding: 12px 14px;
-  transition: background 0.2s ease-in-out;
-}
-
-.navigation-links a:hover {
-  background-color: rgba(0, 255, 163, 0.1);
-}
-```
-
 ### `app\templates\index.html`
 ```html
 <!DOCTYPE html>
@@ -1649,16 +1667,7 @@ html, body {
         <h1>Welcome to the Ebook Website</h1>
         <label><p class="info">Hi! If you have an account, you can <a href="/auth/login">Login</a></p></label>
         <label><p class="info">Don't have an account? No worries! You can <a href="/auth/register">Register</a> here.</p></label>
-        <script>
-            (function () {
-              const style = localStorage.getItem('style') || 'light_mode';
-              const link = document.createElement('link');
-              link.rel = 'stylesheet';
-              link.onload = () => document.body.style.visibility = 'visible';
-              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-              document.head.appendChild(link);
-            })();
-          </script>
+        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1713,16 +1722,7 @@ html, body {
                 </a>
             </li>
         </ul>
-        <script>
-            (function () {
-              const style = localStorage.getItem('style') || 'light_mode';
-              const link = document.createElement('link');
-              link.rel = 'stylesheet';
-              link.onload = () => document.body.style.visibility = 'visible';
-              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-              document.head.appendChild(link);
-            })();
-          </script>
+        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1760,16 +1760,7 @@ html, body {
             <p style="color:royalblue;"> {{ error }}</p>
             {% endif %}
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
-        <script>
-            (function () {
-              const style = localStorage.getItem('style') || 'light_mode';
-              const link = document.createElement('link');
-              link.rel = 'stylesheet';
-              link.onload = () => document.body.style.visibility = 'visible';
-              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-              document.head.appendChild(link);
-            })();
-          </script>
+        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1870,52 +1861,8 @@ html, body {
         </footer>
     </div>
 
-    <script>
-      (function () {
-        const style = localStorage.getItem('style') || 'light_mode';
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.onload = () => document.body.style.visibility = 'visible';
-        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-        document.head.appendChild(link);
-      })();
-
-      async function fetchProfileData() {
-        const resultBox = document.getElementById('result');
-        try {
-          const res = await fetch('/api/v1/information_admin', {
-            method: 'GET',
-            credentials: 'include'
-          });
-
-          const json = await res.json();
-          resultBox.style.display = 'block';
-
-          if (res.ok) {
-            const u = json.user_data;
-            resultBox.innerHTML = `
-              <strong>ID:</strong> ${u.id}<br>
-              <strong>Username:</strong> ${u.username}<br>
-              <strong>Password:</strong> ${u.password}<br>
-              <strong>Email:</strong> ${u.email}<br>
-              <strong>First Name:</strong> ${u.first_name}<br>
-              <strong>Last Name:</strong> ${u.last_name}<br>
-              <strong>Phone:</strong> ${u.number_phone}<br>
-              <strong>Website:</strong> ${u.website_company}<br>
-              <strong>Birth Date:</strong> ${u.birth_date}<br>
-              <strong>is_admin:</strong> ${u.is_admin}<br>
-              <strong>created_at:</strong> ${u.created_at}
-            `;
-          } else {
-            resultBox.innerHTML = `<span class="error">${json.error}</span>`;
-          }
-        } catch (err) {
-          resultBox.innerHTML = `<span class="error">Không thể kết nối đến server.</span>`;
-        }
-      }
-
-      window.onload = fetchProfileData;
-    </script>
+    <script src="/static/script-js/get_information_admin.js"></script>
+    <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>
 ```
@@ -1947,16 +1894,7 @@ html, body {
             {% endif %}
         <p>Don't have an account? <a href="/auth/register">Register Here</a></p>
         <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
-        <script>
-            (function () {
-              const style = localStorage.getItem('style') || 'light_mode';
-              const link = document.createElement('link');
-              link.rel = 'stylesheet';
-              link.onload = () => document.body.style.visibility = 'visible';
-              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-              document.head.appendChild(link);
-            })();
-          </script>
+        <script src="/static/script-js/load_style.js"></script>
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
@@ -1986,14 +1924,6 @@ html, body {
   </div>
   {% if running %}
   <script>
-    (function () {
-      const style = localStorage.getItem('style') || 'light_mode';
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.onload = () => document.body.style.visibility = 'visible';
-      link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-      document.head.appendChild(link);
-    })();
     let countdown = 5;
     const countdownSpan = document.getElementById('countdown');
 
@@ -2009,6 +1939,7 @@ html, body {
 
   </script>
   {% endif %}
+  <script src="/static/script-js/load_style.js"></script>
 
 </body>
 </html>
@@ -2076,16 +2007,7 @@ html, body {
       </section>
 
     </main>
-    <script>
-      (function () {
-        const style = localStorage.getItem('style') || 'light_mode';
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.onload = () => document.body.style.visibility = 'visible';
-        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-        document.head.appendChild(link);
-      })();
-    </script>
+    <script src="/static/script-js/load_style.js"></script>
     <!-- Footer -->
     <footer>
       &copy; 2025 TheWindGhost
@@ -2120,16 +2042,7 @@ html, body {
             <p>{{ Notification }}</p>
             {% endif %}
         </form>
-        <script>
-            (function () {
-              const style = localStorage.getItem('style') || 'light_mode';
-              const link = document.createElement('link');
-              link.rel = 'stylesheet';
-              link.onload = () => document.body.style.visibility = 'visible';
-              link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-              document.head.appendChild(link);
-            })();
-          </script>
+        <script src="/static/script-js/load_style.js"></script>
     <!-- Footer -->
     <footer>
         &copy; 2025 TheWindGhost
@@ -2167,16 +2080,7 @@ html, body {
             {% endif %}
         </form>
     </div>
-    <script>
-        (function () {
-          const style = localStorage.getItem('style') || 'light_mode';
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.onload = () => document.body.style.visibility = 'visible';
-          link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-          document.head.appendChild(link);
-        })();
-      </script>
+    <script src="/static/script-js/load_style.js"></script>
     <!-- Footer -->
     <footer>
         &copy; 2025 TheWindGhost
@@ -2205,23 +2109,8 @@ html, body {
     </footer>
   </div>
 
-  <script>
-    function goBack() {
-      if (document.referrer) {
-        window.location.href = document.referrer;
-      } else {
-        window.history.back();
-      }
-    }
-    (function () {
-      const style = localStorage.getItem('style') || 'light_mode';
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.onload = () => document.body.style.visibility = 'visible';
-      link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-      document.head.appendChild(link);
-    })();
-  </script>
+  <script src="/static/script-js/redirect_referer.js"></script>
+  <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>
 ```
@@ -2264,12 +2153,9 @@ html, body {
     <section class="finance-info">
       <p style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
         <span class="material-icons">account_balance</span>
-        <strong>Account Balance:</strong> $1,250.75
+        <strong>Account Balance:</strong> $<span id="balance-amount"></span>
       </p>
-      <p style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-        <span class="material-icons">receipt_long</span>
-        <strong>Last Transaction:</strong> $50.00 (Withdrawn)
-      </p>
+      <!-- demo and waiting for code backend-->
       <p style="display: flex; align-items: center; gap: 8px;">
         <span class="material-icons">hourglass_empty</span>
         <strong>Pending:</strong> $200.00
@@ -2289,8 +2175,8 @@ html, body {
           </a>
         </li>
         <li>
-          <a href="/user/balances" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #2d3e50; font-weight: 600;">
-            <span class="material-icons">account_balance_wallet</span> Balances
+          <a href="/user/wallet" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #2d3e50; font-weight: 600;">
+            <span class="material-icons">wallet</span> Balances
           </a>
         </li>
         <li>
@@ -2301,16 +2187,8 @@ html, body {
       </ul>
     </nav>
 
-    <script>
-      (function () {
-        const style = localStorage.getItem('style') || 'light_mode';
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.onload = () => document.body.style.visibility = 'visible';
-        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-        document.head.appendChild(link);
-      })();
-    </script>
+    <script src="/static/script-js/get_balance_user.js"></script>
+    <script src="/static/script-js/load_style.js"></script>
 
     <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
       &copy; 2025 TheWindGhost
@@ -2361,52 +2239,8 @@ html, body {
         </footer>
     </div>
 
-    <script>
-        async function fetchProfileData() {
-          const resultBox = document.getElementById('result');
-          try {
-            const res = await fetch('/api/v1/information_users', {
-              method: 'GET',
-              credentials: 'include'
-            });
-
-            const json = await res.json();
-            resultBox.style.display = 'block';
-
-            if (res.ok) {
-              const u = json.user_data;
-              resultBox.innerHTML = `
-                <strong>ID:</strong> ${u.id}<br>
-                <strong>Username:</strong> ${u.username}<br>
-                <strong>Password:</strong> ${u.password}<br>
-                <strong>Email:</strong> ${u.email}<br>
-                <strong>First Name:</strong> ${u.first_name}<br>
-                <strong>Last Name:</strong> ${u.last_name}<br>
-                <strong>Phone:</strong> ${u.number_phone}<br>
-                <strong>Website:</strong> ${u.website_company}<br>
-                <strong>Birth Date:</strong> ${u.birth_date}<br>
-                <strong>is_admin:</strong> ${u.is_admin}<br>
-                <strong>created_at:</strong> ${u.created_at}
-              `;
-            } else {
-              resultBox.innerHTML = `<span class="error">${json.error}</span>`;
-            }
-          } catch (err) {
-            resultBox.innerHTML = `<span class="error">Không thể kết nối đến server.</span>`;
-          }
-        }
-
-        window.onload = fetchProfileData;
-
-        (function () {
-          const style = localStorage.getItem('style') || 'light_mode';
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.onload = () => document.body.style.visibility = 'visible';
-          link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-          document.head.appendChild(link);
-        })();
-      </script>
+    <script src="/static/script-js/get_information_user.js"></script>
+    <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>
 ```
@@ -2480,56 +2314,8 @@ html, body {
     </footer>
   </div>
 
-  <script>
-    document.getElementById('settings-form').addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const data = {
-        email: document.getElementById('email').value,
-        birth_date: document.getElementById('birth_date').value,
-        password: document.getElementById('password').value,
-        setting: document.getElementById('setting').value,
-      };
-
-      localStorage.setItem('style', data.setting);
-
-      const xmlPayload = `
-        <?xml version="1.0" encoding="UTF-8"?>
-        <root>
-          <email>${data.email}</email>
-          <birth_date>${data.birth_date}</birth_date>
-          <password>${data.password}</password>
-          <setting>${data.setting}</setting>
-        </root>
-      `.trim();
-
-      try {
-        const res = await fetch('/user/setting', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/xml' },
-          credentials: 'include',
-          body: xmlPayload
-        });
-
-        const html = await res.text();
-        document.open();
-        document.write(html);
-        document.close();
-      } catch (err) {
-        document.getElementById('clientError').style.display = 'block';
-        document.getElementById('clientError').textContent = "Failed to submit. Check network or server.";
-      }
-    });
-
-    (function () {
-      const style = localStorage.getItem('style') || 'light_mode';
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.onload = () => document.body.style.visibility = 'visible';
-      link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-      document.head.appendChild(link);
-    })();
-  </script>
+  <script src="/static/script-js/update_setting_user.js"></script>
+  <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>
 ```
@@ -2543,13 +2329,8 @@ html, body {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
   <title>Wallet</title>
-
-  <!-- Internal CSS -->
-  <link rel="stylesheet" href="/static/styles.css">
-
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
@@ -2590,16 +2371,7 @@ html, body {
       </li>
     </ul>
 
-    <script>
-      (function () {
-        const style = localStorage.getItem('style') || 'light_mode';
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.onload = () => document.body.style.visibility = 'visible';
-        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-        document.head.appendChild(link);
-      })();
-    </script>
+    <script src="/static/script-js/load_style.js"></script>
 
     <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
       &copy; 2025 TheWindGhost

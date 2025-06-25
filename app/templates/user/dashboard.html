@@ -34,12 +34,9 @@
     <section class="finance-info">
       <p style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
         <span class="material-icons">account_balance</span> 
-        <strong>Account Balance:</strong> $1,250.75
+        <strong>Account Balance:</strong> $<span id="balance-amount"></span>
       </p>
-      <p style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-        <span class="material-icons">receipt_long</span> 
-        <strong>Last Transaction:</strong> $50.00 (Withdrawn)
-      </p>
+      <!-- demo and waiting for code backend-->
       <p style="display: flex; align-items: center; gap: 8px;">
         <span class="material-icons">hourglass_empty</span> 
         <strong>Pending:</strong> $200.00
@@ -59,8 +56,8 @@
           </a>
         </li>
         <li>
-          <a href="/user/balances" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #2d3e50; font-weight: 600;">
-            <span class="material-icons">account_balance_wallet</span> Balances
+          <a href="/user/wallet" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #2d3e50; font-weight: 600;">
+            <span class="material-icons">wallet</span> Balances
           </a>
         </li>
         <li>
@@ -71,16 +68,8 @@
       </ul>
     </nav>
 
-    <script>
-      (function () {
-        const style = localStorage.getItem('style') || 'light_mode';
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.onload = () => document.body.style.visibility = 'visible';
-        link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-        document.head.appendChild(link);
-      })();
-    </script>
+    <script src="/static/script-js/get_balance_user.js"></script>
+    <script src="/static/script-js/load_style.js"></script>
 
     <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
       &copy; 2025 TheWindGhost

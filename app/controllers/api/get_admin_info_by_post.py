@@ -32,6 +32,7 @@ def get_information_admin():
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
                 'is_admin': row['is_admin'],
+                'balance': row['balance'],
                 'created_at': row['created_at']
             }
             return jsonify({"admin_data": admin_data}), 200

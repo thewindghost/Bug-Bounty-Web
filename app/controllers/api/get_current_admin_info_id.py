@@ -27,6 +27,7 @@ def get_current_admin_info():
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
                 'is_admin': row['is_admin'],
+                'balance': row['balance'],
                 'created_at': row['created_at']
             }
             return jsonify({"user_data": admin_data}), 200

@@ -9,5 +9,5 @@ def update_balance_user():
             return render_template('user/wallet.html', result=balance)
 
     except Exception as e:
-            error = str(e)
+            error = 'Internal Server error', 500
             return render_template('user/wallet.html', error=error)

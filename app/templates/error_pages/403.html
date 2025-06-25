@@ -16,22 +16,7 @@
     </footer>
   </div>
 
-  <script>
-    function goBack() {
-      if (document.referrer) {
-        window.location.href = document.referrer;
-      } else {
-        window.history.back();
-      }
-    }
-    (function () {
-      const style = localStorage.getItem('style') || 'light_mode';
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.onload = () => document.body.style.visibility = 'visible';
-      link.href = style === 'dark_mode' ? '/static/style2.css' : '/static/styles.css';
-      document.head.appendChild(link);
-    })();
-  </script>
+  <script src="/static/script-js/redirect_referer.js"></script>
+  <script src="/static/script-js/load_style.js"></script>
 </body>
 </html>

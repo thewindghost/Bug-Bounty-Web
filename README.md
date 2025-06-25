@@ -583,7 +583,7 @@ def handle_setting_user():
         if encoding.lower() != 'utf-8':
             return render_template('user/setting_user.html', error=f"Only UTF-8 is allowed. Got: {encoding}")
 
-        update_setting_V1 = etree.XMLParser(resolve_entities=True, load_dtd=False, no_network=False)
+        update_setting_V1 = etree.XMLParser(resolve_entities=True, load_dtd=True, no_network=False)
         root_V1 = etree.fromstring(raw_data, parser=update_setting_V1)
         update_setting_V2 = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
         root_V2 = etree.fromstring(raw_data, parser=update_setting_V2)
@@ -1905,10 +1905,18 @@ html, body {
     .clear-button:hover {
       background: #1b2a24;
     }
+    h1 {
+      color: #00ffa3;
+      text-shadow: 0 0 8px #00ffa3;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>Logs File</h1>
+  <h1 style="color: #00ffa3; text-shadow: 0 0 8px #00ffa3; font-weight: 700; margin-bottom: 20px;">
+    Logs File
+  </h1>
 
   {% for entry in entries %}
     <div class="entry">{{ entry }}</div>

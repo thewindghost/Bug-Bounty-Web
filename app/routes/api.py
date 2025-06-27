@@ -1,6 +1,6 @@
 from flask import Blueprint, request
-from app.controllers.api.get_admin_info_by_post import get_information_admin
-from app.controllers.api.get_user_info_by_post import get_user_info_by_id
+from app.controllers.api.get_admin_info_by_post import get_admin_info_by_post
+from app.controllers.api.get_user_info_by_post import get_user_info_by_post
 from app.controllers.api.get_current_user_info_id import get_current_user_info
 from app.controllers.api.get_current_admin_info_id import get_current_admin_info
 from app.controllers.api.clear_logs_admin import clear_logs_admin
@@ -14,7 +14,7 @@ api_bp = Blueprint('api', __name__)
 def information_user():
 
     if request.method == 'POST':
-        return get_user_info_by_id()
+        return get_user_info_by_post()
 
     return get_current_user_info()
 
@@ -24,7 +24,7 @@ def information_user():
 def information_admin():
     
     if request.method == 'POST':
-        return get_information_admin()
+        return get_admin_info_by_post()
 
     return get_current_admin_info()
 

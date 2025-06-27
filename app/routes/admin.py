@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, session, request
 from app.utils.decorator_admin import admin_required
 from app.controllers.admin.read_logs import read_logs_info
-from app.controllers.admin.check_login import check_login_admin
+from app.controllers.admin.login_control_panel import auth_login_admin
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -9,7 +9,7 @@ admin_bp = Blueprint('admin', __name__)
 def admin_login():
 
     if request.method == 'POST':
-        return check_login_admin()
+        return auth_login_admin()
     
     return render_template('admin/login_admin.html')
 

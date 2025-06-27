@@ -3,7 +3,7 @@ from werkzeug.security import check_password_hash
 from app.database.connect_database import get_db_connection
 from bleach import clean
         
-def check_login_admin():
+def auth_login_admin():
     
     error = None
     

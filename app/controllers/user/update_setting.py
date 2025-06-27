@@ -6,7 +6,6 @@ from app.services.update_user_profile import update_user_profile
 from lxml import etree
 from app.config import Config
 from datetime import datetime
-from bleach import clean
 
 def handle_setting_user():
     
@@ -27,7 +26,6 @@ def handle_setting_user():
         update_setting_V2 = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
         root_V2 = etree.fromstring(raw_data, parser=update_setting_V2)
 
-        #username = clean(render_template_string(session.get("username")))
         username = session.get("username")
         is_admin = session.get("is_admin")
         new_email = root_V2.findtext("email")

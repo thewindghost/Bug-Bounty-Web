@@ -2,7 +2,7 @@ import sqlite3
 from flask import request, jsonify
 from app.config import Config
 
-def get_user_info_by_id():
+def get_user_info_by_post():
 
     try:
         user_id_raw_post = request.form.get('user_id')

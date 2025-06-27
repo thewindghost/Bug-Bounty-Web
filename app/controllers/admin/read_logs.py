@@ -2,7 +2,6 @@ from flask import render_template
 from app.config import Config
 import os
 
-
 def read_logs_info():
     try:
         if not os.path.exists(Config.LOG_FILE_RELATIVE_PATH):

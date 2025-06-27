@@ -19,18 +19,19 @@ def login():
         raw_password = clean(request.form.get('password', ''))
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT username, is_admin, password FROM users WHERE username = '" + username + "'")
+        cursor.execute("SELECT username, is_admin, password, id FROM users WHERE username = ?", (username,))
         row = cursor.fetchone()
         conn.close()
         
         if row and check_password_hash(row[2], raw_password):
             session['username'] = row[0]
             session['is_admin'] = bool(row[1])
+            session['user_id'] = int(row[3])
             return redirect(url_for('user.user_dashboard'))
         
         else:
             error = "Invalid Username or Password"
-        
+
     return render_template('auth/login.html', error=error)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])

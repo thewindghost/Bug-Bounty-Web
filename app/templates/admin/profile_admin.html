@@ -19,7 +19,9 @@
 <body>
     <div class="card" id="card" style="visibility: hidden;">
         {% if username %}
-        <h1>Profile {{ username }}</h1>
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Profile <span class="username" style="color: #4a90e2;">{{ username }}</span>
+        </h1>
         {% endif %}
 
         <div id="result" class="result-box" style="display:none;">Information</div>

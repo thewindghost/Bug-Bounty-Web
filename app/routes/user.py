@@ -29,7 +29,7 @@ def user_update_balance():
 @user_required
 def user_profile():
 
-    return render_template('user/profile_user.html', template_rendered=session['username'])
+    return render_template('user/profile_user.html', username=session['username'])
 
 @user_bp.route('/dashboard', methods=['GET'])
 @user_required

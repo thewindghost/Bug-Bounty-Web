@@ -16,7 +16,11 @@
 </head>
 <body>
     <div class="card">
-        <h1>Control Panel Login</h1>
+        
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Control Panel Login
+        </h1>
+
         <form action="/admin/login" method="POST">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required placeholder="Enter your username">
@@ -26,12 +30,15 @@
 
             <button type="submit">Login</button>
         </form>
-            {% if error %}
+        
+        {% if error %}
             <p style="color:royalblue;"> {{ error }}</p>
             {% endif %}
-        <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+        
+            <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+        
         <footer>
-            &copy; 2025 TheWindGhost
+        &copy; 2025 TheWindGhost
         </footer>
     </div>
 </body>

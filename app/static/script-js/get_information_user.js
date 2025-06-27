@@ -17,18 +17,30 @@ async function fetchProfileData() {
       const u = json.user_data;
 
       resultBox.innerHTML = `
-        <strong>ID:</strong> ${u.id}<br>
-        <strong>Username:</strong> ${u.username}<br>
-        <strong>Password:</strong> ${u.password}<br>
-        <strong>Email:</strong> ${u.email}<br>
-        <strong>First Name:</strong> ${u.first_name}<br>
-        <strong>Last Name:</strong> ${u.last_name}<br>
-        <strong>Phone:</strong> ${u.number_phone}<br>
-        <strong>Website:</strong> ${u.website_company}<br>
-        <strong>Birth Date:</strong> ${u.birth_date}<br>
-        <strong>is_admin:</strong> ${u.is_admin}<br>
-        <strong>balance:</strong> ${u.balance}<br>
-        <strong>created_at:</strong> ${u.created_at}
+      🔹<strong>Personal Information</strong><br>
+        <strong>ID:</strong> <span style="color:#28a745;">${u.id}</span><br>
+        <strong>First Name:</strong> <span style="color:#007BFF;">${u.first_name}</span><br>
+        <strong>Last Name:</strong> <span style="color:#007BFF;">${u.last_name}</span><br>
+        <strong>Email:</strong> <span style="color:#17a2b8;">${u.email}</span><br>
+        <strong>Phone:</strong> <span style="color:rgb(255, 166, 0);">${u.number_phone}</span><br>
+        <strong>Website:</strong> <span style="color:rgb(255, 166, 0);">${u.website_company}</span><br>
+        <strong>Birth Date:</strong> <span style="color:rgb(255, 166, 0);">${u.birth_date}</span><br>
+        <strong>Created At:</strong> <span style="color:rgb(255, 166, 0);">${u.created_at}</span><br>
+        <br>
+
+      🔹<strong>Account And Permissions</strong><br>
+        <strong>Username:</strong> <span style="color:#007BFF; font-weight:bold;">${u.username}</span><br>
+        <strong>Admin:</strong> <span style="color:${u.is_admin ? '#28a745' : '#dc3545'};">${u.is_admin}</span><br>
+        <strong>Account Balance:</strong> <span style="color:rgb(255, 166, 0);">$${u.balance}</span><br>
+        <strong>Pending Loan Amount:</strong> <span style="color:rgb(255, 166, 0);">$${u.pending_loan_amount}</span><br>
+        <strong>Pending Loan Count:</strong> <span style="color:rgb(255, 166, 0);">$${u.pending_loan_count}</span><br>
+        <br>
+
+      🔹<strong>Password (hashed)</strong><br>
+        <details>
+          <summary style="cursor: pointer; color: #28a745;">Show hashed password</summary>
+          <p style="word-break: break-all; color:rgb(255, 166, 0);"><strong>Password:</strong> ${u.password}</p>
+        </details>
       `;
     } else {
       resultBox.innerHTML = `<span class="error">${json.error}</span>`;
@@ -36,7 +48,6 @@ async function fetchProfileData() {
   } catch (err) {
     resultBox.innerHTML = `<span class="error">Không thể kết nối đến server.</span>`;
   } finally {
-    // ✅ Sau khi xử lý xong thì hiện ra card
     card.style.visibility = 'visible';
   }
 }

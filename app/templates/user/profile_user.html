@@ -4,22 +4,35 @@
     <title>Profile</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Preconnect font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
     <!-- Material Icons -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Theme CSS Loader -->
     <script>
         const style = localStorage.getItem('style') || 'light_mode';
         const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
         document.write(`<link rel="stylesheet" href="${css}">`);
     </script>
+
+    <!--JS-->
     <script src="{{ url_for('static', filename='script-js/get_information_user.js') }}"></script>
 </head>
 <body>
     <div class="card" id="card" style="visibility: hidden;">
-        {% if template_rendered %}
-        <h1>Profile {{ template_rendered }}</h1>
+        {% if username %}
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Profile <span class="username" style="color: #4a90e2;">{{ username }}</span>
+        </h1>
         {% endif %}
 
         <div id="result" class="result-box" style="display:none;">Information</div>

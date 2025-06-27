@@ -1,6 +1,5 @@
 async function fetchBalanceOnly() {
     const balanceSpan = document.getElementById('balance-amount');
-    const card = document.getElementById('card');
 
     try {
       const res = await fetch('/api/v1/information_users', {
@@ -22,4 +21,6 @@ async function fetchBalanceOnly() {
     }
   }
   
-  window.onload = fetchBalanceOnly;
+  document.addEventListener("DOMContentLoaded", () => {
+    fetchBalanceOnly();
+  });

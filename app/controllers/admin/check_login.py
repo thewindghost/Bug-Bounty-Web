@@ -13,16 +13,15 @@ def check_login_admin():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT username, is_admin, password FROM admins WHERE username = ?", (username,))
+    cursor.execute("SELECT username, is_admin, password, id FROM admins WHERE username = ?", (username,))
     row = cursor.fetchone()
     conn.close()
 
     if row and check_password_hash(row[2], raw_password):
         session['username'] = row[0]
         session['is_admin'] = bool(row[1])
-
-        if session.get('is_admin') == True:
-            return redirect(url_for('admin.admin_panel'))
+        session['admin_id'] = int(row[3])
+        return redirect(url_for('admin.admin_panel'))
 
     else:
         error = "Invalid Username or Password"

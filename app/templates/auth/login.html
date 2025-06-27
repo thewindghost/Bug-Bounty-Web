@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    
     <title>Login</title>
+
     <script>
         const style = localStorage.getItem('style') || 'light_mode';
         const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
         document.write(`<link rel="stylesheet" href="${css}">`);
     </script>
+
 </head>
 <body>
     <div class="card">
-        <h1>Login</h1>
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Login
+        </h1>
+
         <form action="/auth/login" method="POST">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required placeholder="Enter your username">

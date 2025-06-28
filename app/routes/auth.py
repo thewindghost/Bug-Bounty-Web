@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, session, make_response
+from flask import Blueprint, render_template, request
 from app.controllers.auth.register import auth_register_user
 from app.controllers.auth.login import auth_login_user
 from app.controllers.auth.reset_password import auth_reset_password_user

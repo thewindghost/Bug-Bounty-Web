@@ -15,7 +15,7 @@ def reset_password_check_token_user_by_post(account_id, token):
         conn = get_db_connection()
 
         conn.execute(
-            'UPDATE accounts SET password = ? WHERE id = ?', (hashed_password, account_id)
+            'UPDATE users SET password = ? WHERE id = ?', (hashed_password, account_id)
         )
 
         conn.commit()

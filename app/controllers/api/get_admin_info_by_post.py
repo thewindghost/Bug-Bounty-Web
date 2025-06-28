@@ -40,4 +40,5 @@ def get_admin_info_by_post():
             return jsonify({"error": "No data found or invalid ID"}), 404
         
     except Exception as e:
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+        error = "Internal Server Error"
+        return jsonify({"error": f"Internal server error: {error}"}), 500

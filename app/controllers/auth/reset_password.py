@@ -2,11 +2,13 @@ from flask import request, url_for, render_template
 from app.services.send_email import send_reset_email
 from app.database.connect_database import get_db_connection
 from app.services.get_token import get_token_serializer
+import time
 from ... import cache
 
 def auth_reset_password_user():
     
     try:        
+        timestamp = time.time() 
         email = request.form.get('email', '').strip()
         
         # Check rate limit with cache
@@ -15,15 +17,18 @@ def auth_reset_password_user():
             return render_template('auth/reset_password.html', Notification=Notification)
         
         conn = get_db_connection()
-        account = conn.execute("SELECT id FROM accounts WHERE email = ?", (email,)).fetchone()
+        user = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
         conn.close()
         
-        if account:
+        if user:
             
-            account_id = account['id']
+            user_id = user['id']
             serializer = get_token_serializer()
-            token = serializer.dumps({'account_id': account_id})
-            reset_url = url_for('perform_password_reset', token=token, _external=True)
+            token = serializer.dumps({
+                'user_id': user_id,
+                'timestamp': timestamp
+            })
+            reset_url = url_for('auth.perform_password_reset', token=token, _external=True)
             
             send_reset_email(email, reset_url)
             
@@ -34,6 +39,4 @@ def auth_reset_password_user():
         return render_template('auth/reset_password.html', Notification=Notification)
     
     except Exception as e:
-        
-        e = "Internal Server Error", 500
-        return render_template('auth/reset_password.html', error=e)
+        return render_template('auth/reset_password.html', error=str(e))

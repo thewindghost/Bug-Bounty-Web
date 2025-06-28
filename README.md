@@ -63,7 +63,7 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     ├── controllers/
     │   ├── __init__.py
     │   ├── admin/
-    │   │   ├── check_login.py
+    │   │   ├── login_control_panel.py
     │   │   └── read_logs.py
     │   ├── api/
     │   │   ├── clear_logs_admin.py
@@ -71,11 +71,20 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   │   ├── get_current_admin_info_id.py
     │   │   ├── get_current_user_info_id.py
     │   │   └── get_user_info_by_post.py
+    │   ├── auth/
+    │   │   ├── check_token_used.py
+    │   │   ├── get_account_id_from_token.py
+    │   │   ├── login.py
+    │   │   ├── logout.py
+    │   │   ├── register.py
+    │   │   ├── reset_password.py
+    │   │   └── reset_password_check_token_post.py
     │   └── user/
     │       ├── update_balance.py
     │       └── update_setting.py
     ├── database/
     │   ├── __init__.py
+    │   ├── check_database.py
     │   ├── connect_database.py
     │   └── init_db.py
     ├── http/
@@ -104,6 +113,7 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   │   ├── get_balance_user.js
     │   │   ├── get_information_admin.js
     │   │   ├── get_information_user.js
+    │   │   ├── get_pending_loan_amount_user.js
     │   │   ├── redirect_referer.js
     │   │   └── update_setting_user.js
     │   └── styles/
@@ -139,8 +149,27 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
 ### `clean_docker_not_using.sh`
 ```sh
 #!/bin/sh
+
+echo "[*] Tìm container đang bị restart vòng lặp..."
+RESTARTING_CONTAINERS=$(docker ps -a --filter "status=restarting" --format "{{.ID}}")
+
+if [ -n "$RESTARTING_CONTAINERS" ]; then
+  echo "[!] Đang có container restart liên tục, sẽ stop:"
+  echo "$RESTARTING_CONTAINERS"
+  for container in $RESTARTING_CONTAINERS; do
+    docker stop "$container"
+  done
+else
+  echo "[+] Không có container nào bị restart liên tục."
+fi
+
+echo "[*] Xoá container không dùng..."
 docker container prune -f
+
+echo "[*] Xoá image không dùng (kể cả dangling và unused)..."
 docker image prune -a -f
+
+echo "[+] Dọn dẹp Docker hoàn tất."
 ```
 
 ### `docker-compose.yml`
@@ -168,6 +197,7 @@ services:
     #  - "443:443"
     volumes:
       - ./app/http/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx_logs:/var/log/nginx
     # - ./app/http/ssl:/etc/nginx/ssl:ro
 ```
 
@@ -280,14 +310,14 @@ class Config:
 ```python
 ```
 
-### `app\controllers\admin\check_login.py`
+### `app\controllers\admin\login_control_panel.py`
 ```python
 from flask import session, request, redirect, url_for, render_template
 from werkzeug.security import check_password_hash
 from app.database.connect_database import get_db_connection
 from bleach import clean
 
-def check_login_admin():
+def auth_login_admin():
 
     error = None
 
@@ -297,16 +327,15 @@ def check_login_admin():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT username, is_admin, password FROM admins WHERE username = ?", (username,))
+    cursor.execute("SELECT username, is_admin, password, id FROM admins WHERE username = ?", (username,))
     row = cursor.fetchone()
     conn.close()
 
     if row and check_password_hash(row[2], raw_password):
         session['username'] = row[0]
         session['is_admin'] = bool(row[1])
-
-        if session.get('is_admin') == True:
-            return redirect(url_for('admin.admin_panel'))
+        session['admin_id'] = int(row[3])
+        return redirect(url_for('admin.admin_panel'))
 
     else:
         error = "Invalid Username or Password"
@@ -319,7 +348,6 @@ def check_login_admin():
 from flask import render_template
 from app.config import Config
 import os
-
 
 def read_logs_info():
     try:
@@ -367,7 +395,7 @@ import sqlite3
 from flask import request, jsonify
 from app.config import Config
 
-def get_information_admin():
+def get_admin_info_by_post():
 
     try:
         admin_id_raw = request.form.get('admin_id')
@@ -405,7 +433,8 @@ def get_information_admin():
             return jsonify({"error": "No data found or invalid ID"}), 404
 
     except Exception as e:
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+        error = "Internal Server Error"
+        return jsonify({"error": f"Internal server error: {error}"}), 500
 ```
 
 ### `app\controllers\api\get_current_admin_info_id.py`
@@ -417,32 +446,32 @@ from app.config import Config
 def get_current_admin_info():
 
     try:
-        username = session.get('username')
+        admin_id = session.get('admin_id')
         db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM admins WHERE username = ?", (username,))
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
         row = cursor.fetchone()
         conn.close()
 
         if row:
             admin_data = {
-                "id": row["id"],
-                "username": row["username"],
-                "password": row["password"],
-                "email": row["email"],
+                "id": int(row["id"]),
                 'first_name': row['first_name'],
                 'last_name': row['last_name'],
+                "email": row["email"],
                 'number_phone': row['number_phone'],
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
-                'is_admin': row['is_admin'],
+                'created_at': row['created_at'],
+                "username": row["username"],
+                'is_admin': bool(row['is_admin']),
                 'balance': row['balance'],
-                'created_at': row['created_at']
+                "password": row["password"]
             }
-            return jsonify({"user_data": admin_data}), 200
+            return jsonify({"admin_data": admin_data}), 200
         else:
             return jsonify({"error": "No data found or invalid ID"}), 404
 
@@ -459,30 +488,32 @@ from app.config import Config
 def get_current_user_info():
 
     try:
-        username = session.get('username')
+        user_id = session.get('user_id')
         db_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         row = cursor.fetchone()
         conn.close()
 
         if row:
             user_data = {
-                "id": row["id"],
-                "username": row["username"],
-                "password": row["password"],
-                "email": row["email"],
+                "id": int(row["id"]),
                 'first_name': row['first_name'],
                 'last_name': row['last_name'],
+                "email": row["email"],
                 'number_phone': row['number_phone'],
                 'website_company': row['website_company'],
                 'birth_date': row['birth_date'],
-                'is_admin': row['is_admin'],
+                'created_at': row['created_at'],
+                "username": row["username"],
+                'is_admin': bool(row['is_admin']),
                 'balance': row['balance'],
-                'created_at': row['created_at']
+                "password": row["password"],
+                "pending_loan_amount": float(row["pending_loan_amount"]),
+                "pending_loan_count": int(row["pending_loan_count"])
             }
             return jsonify({"user_data": user_data}), 200
         else:
@@ -498,7 +529,7 @@ import sqlite3
 from flask import request, jsonify
 from app.config import Config
 
-def get_user_info_by_id():
+def get_user_info_by_post():
 
     try:
         user_id_raw_post = request.form.get('user_id')
@@ -540,6 +571,211 @@ def get_user_info_by_id():
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 ```
 
+### `app\controllers\auth\check_token_used.py`
+```python
+from flask import render_template
+
+def check_token_used():
+
+    Notification = 'This reset link has already been used.'
+    return render_template('auth/reset_token.html', Notification=Notification, show_form=False)
+```
+
+### `app\controllers\auth\get_account_id_from_token.py`
+```python
+from flask import render_template
+from app.services.get_token import get_token_serializer
+from itsdangerous import BadSignature, SignatureExpired
+
+def get_account_id_user_from_token(token):
+
+    serializer = get_token_serializer()
+
+    try:
+        data = serializer.loads(token, max_age=3600)
+        return data.get('account_id')
+
+    except SignatureExpired:
+        return render_template('auth/reset_token.html', Notification='The reset link has expired. Please request a new one', show_form=False)
+
+    except BadSignature:
+        return render_template('auth/reset_token.html', Notification='The reset link is invalid. Please request a new one.', show_form=False)
+```
+
+### `app\controllers\auth\login.py`
+```python
+from flask import request, session, redirect, url_for, render_template
+from bleach import clean
+from werkzeug.security import check_password_hash
+from app.database.connect_database import get_db_connection
+
+def auth_login_user():
+
+    try:
+        username = request.form.get('username', '')
+        raw_password = clean(request.form.get('password', ''))
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT username, is_admin, password, id FROM users WHERE username = ?", (username,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if row and check_password_hash(row[2], raw_password):
+            session['username'] = row[0]
+            session['is_admin'] = bool(row[1])
+            session['user_id'] = int(row[3])
+            return redirect(url_for('user.user_dashboard'))
+
+        else:
+            error = "Invalid Username or Password"
+            return render_template('auth/login.html', error=error)
+
+    except Exception as e:
+        error = "Internal Server Error"
+        return render_template('auth/reset_password.html', error=error)
+```
+
+### `app\controllers\auth\logout.py`
+```python
+from flask import session, request, make_response, render_template
+
+def auth_logout_user():
+
+        session.clear()
+        running_value = request.args.get('running', 'True')
+        response = make_response(render_template('auth/logout.html', running=running_value))
+        response.delete_cookie('session')
+        return response
+```
+
+### `app\controllers\auth\register.py`
+```python
+from flask import request, render_template
+from bleach import clean
+from werkzeug.security import generate_password_hash
+from app.database.connect_database import get_db_connection
+
+def auth_register_user():
+
+    try:
+        username = request.form.get('username', '').strip()
+        raw_password = clean(request.form.get('password', '')).strip()
+        hased_password = generate_password_hash(raw_password)
+        email = clean(request.form.get('email', '')).strip()
+        first_name = clean(request.form.get('first_name', '')).strip()
+        last_name = clean(request.form.get('last_name', '')).strip()
+        number_phone = clean(request.form.get('number_phone', '')).strip()
+        website_company = clean(request.form.get('website_company', '')).strip()
+        birth_date = clean(request.form.get('birth_date', ''))
+
+        # Open connection to database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check if username already exists
+        cursor.execute("SELECT * FROM users WHERE username = '" + username + "'")
+        existing_user = cursor.fetchone()
+
+        if existing_user:
+            error = "Username already exists. Please a defferent one."
+            return render_template('auth/register.html', error=error)
+
+        # Add new user to database
+        cursor.execute('''
+            INSERT INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (username, hased_password, email, first_name, last_name, number_phone, website_company, birth_date))
+
+        conn.commit()
+        conn.close()
+
+        # Register successfully
+        success = 'Register Successfully'
+        return render_template('auth/register.html', success=success)
+
+    except Exception as e:
+        error = "Internal Server Error"
+        return render_template('auth/reset_password.html', error=error)
+```
+
+### `app\controllers\auth\reset_password.py`
+```python
+from flask import request, url_for, render_template
+from app.services.send_email import send_reset_email
+from app.database.connect_database import get_db_connection
+from app.services.get_token import get_token_serializer
+import time
+from ... import cache
+
+def auth_reset_password_user():
+
+    try:
+        timestamp = time.time()
+        email = request.form.get('email', '').strip()
+
+        # Check rate limit with cache
+        if cache.get(f'reset_mail_sent_{email}'):
+            Notification = 'Please wait at least 5 minutes before requesting another password reset email.'
+            return render_template('auth/reset_password.html', Notification=Notification)
+
+        conn = get_db_connection()
+        user = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        conn.close()
+
+        if user:
+
+            user_id = user['id']
+            serializer = get_token_serializer()
+            token = serializer.dumps({
+                'user_id': user_id,
+                'timestamp': timestamp
+            })
+            reset_url = url_for('auth.perform_password_reset', token=token, _external=True)
+
+            send_reset_email(email, reset_url)
+
+            # Email is saved in cache and wait 5 minutes before resetting password again
+            cache.set(f'reset_mail_sent_{email}', True, timeout=300)
+
+        Notification = 'If that email is registered, you will receive a password reset link shortly'
+        return render_template('auth/reset_password.html', Notification=Notification)
+
+    except Exception as e:
+        return render_template('auth/reset_password.html', error=str(e))
+```
+
+### `app\controllers\auth\reset_password_check_token_post.py`
+```python
+from flask import request, render_template
+from werkzeug.security import generate_password_hash
+from app.database.connect_database import get_db_connection
+from ... import cache
+
+def reset_password_check_token_user_by_post(account_id, token):
+
+        new_password = request.form.get('password', '').strip()
+
+        if not new_password:
+            Notification = "Password can't be empty."
+            return render_template('auth/reset_token.html', Notification=Notification)
+
+        hashed_password = generate_password_hash(new_password)
+        conn = get_db_connection()
+
+        conn.execute(
+            'UPDATE users SET password = ? WHERE id = ?', (hashed_password, account_id)
+        )
+
+        conn.commit()
+        conn.close()
+
+        # Mark token as used
+        cache.set(f'token_used_{token}', True, timeout=1800)  # Chặn dùng lại trong thời gian token còn hiệu lực
+
+        Notification2 = 'Your Password has been Updated. You may now log in.'
+        return render_template('auth/reset_token.html', Notification2=Notification2, show_form=False)
+```
+
 ### `app\controllers\user\update_balance.py`
 ```python
 from flask import request, render_template
@@ -567,7 +803,6 @@ from app.services.update_user_profile import update_user_profile
 from lxml import etree
 from app.config import Config
 from datetime import datetime
-from bleach import clean
 
 def handle_setting_user():
 
@@ -588,7 +823,6 @@ def handle_setting_user():
         update_setting_V2 = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True)
         root_V2 = etree.fromstring(raw_data, parser=update_setting_V2)
 
-        #username = clean(render_template_string(session.get("username")))
         username = session.get("username")
         is_admin = session.get("is_admin")
         new_email = root_V2.findtext("email")
@@ -633,6 +867,31 @@ def handle_setting_user():
 
 ### `app\database\__init__.py`
 ```python
+```
+
+### `app\database\check_database.py`
+```python
+import sqlite3
+
+DATABASE_PATH = "./database.db"
+
+conn = sqlite3.connect(DATABASE_PATH)
+cursor = conn.cursor()
+
+print("[+] Tables List:")
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+tables = cursor.fetchall()
+for t in tables:
+    print(" -", t[0])
+
+print("\n[+] Tables Data 'admins' and 'users':")
+cursor.execute("SELECT * FROM admins UNION SELECT * FROM users;")
+rows = cursor.fetchall()
+
+for row in rows:
+    print(row)
+
+conn.close()
 ```
 
 ### `app\database\connect_database.py`
@@ -696,12 +955,11 @@ from app.config import Config
 database_path = Config.DB_CONNECTION_FILE_RELATIVE_PATH
 
 def initialize_database(database_path):
-    # Kết nối DB
     conn = sqlite3.connect(database_path)
     curr = conn.cursor()
 
     # ----------------------------
-    # TẠO BẢNG USERS
+    # USERS
     # ----------------------------
     curr.execute('''
     CREATE TABLE IF NOT EXISTS users (
@@ -714,14 +972,16 @@ def initialize_database(database_path):
         number_phone TEXT NOT NULL,
         website_company TEXT NOT NULL,
         birth_date DATE NOT NULL,
-        is_admin INTEGER DEFAULT 0,
+        is_admin BOOLEAN DEFAULT FALSE,
         balance FLOAT DEFAULT 10.00,
+        pending_loan_amount FLOAT DEFAULT 0.00,
+        pending_loan_count INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
 
     # ----------------------------
-    # TẠO BẢNG ADMINS
+    # ADMINS
     # ----------------------------
     curr.execute('''
     CREATE TABLE IF NOT EXISTS admins (
@@ -734,55 +994,77 @@ def initialize_database(database_path):
         number_phone TEXT NOT NULL,
         website_company TEXT NOT NULL,
         birth_date DATE NOT NULL,
-        is_admin INTEGER DEFAULT 1,
+        is_admin BOOLEAN DEFAULT TRUE,
         balance FLOAT DEFAULT 1000.00,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
 
     # ----------------------------
-    # TẠO USER VÀ ADMIN DỮ LIỆU MẪU
+    # Sample Data
     # ----------------------------
-    # Tạo mật khẩu đã hash
     root_pass = generate_password_hash("root123")
     admin_pass = generate_password_hash("admin123")
     guest_pass = generate_password_hash("guest123")
 
     users_data = [
-        ("guest", guest_pass, "guest@example.com", "Guest", "User", "095358553", "example.com", "1990-03-11", 0, 10.00)
+        ("guest", guest_pass, "guest@example.com", "Guest", "345", "095358553", "example.com", "1990-03-11", 0, 10.00, 0.00, 0)
     ]
+
     admins_data = [
-        ("root", root_pass, "root@example.com", "Root", "User", "092316186", "coding.example.com", "1990-03-11", 1, 1000.00),
-        ("admin", admin_pass, "admin@example.com", "Admin", "User", "098285213", "labs.example.com", "1990-03-11", 1, 1000.00)
+        ("root", root_pass, "root@example.com", "Root", "123", "092316186", "coding.example.com", "1990-03-11", 1, 1000.00),
+        ("admin", admin_pass, "admin@example.com", "Admin", "898", "098285213", "labs.example.com", "1990-03-11", 1, 1000.00 ) #balance = 1e100
     ]
 
     curr.executemany('''
-        INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin, balance)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR IGNORE INTO users (
+            username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin, balance, pending_loan_amount, pending_loan_count
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', users_data)
 
     curr.executemany('''
-        INSERT OR IGNORE INTO admins (username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin, balance)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR IGNORE INTO admins (
+            username, password, email, first_name, last_name, number_phone, website_company, birth_date, is_admin, balance
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', admins_data)
 
-    # Lưu và đóng DB
     conn.commit()
     conn.close()
 ```
 
 ### `app\http\nginx.conf`
 ```config
+log_format main '$remote_addr - $remote_user [$time_local] '
+                '"$request" $status $body_bytes_sent '
+                '"$http_referer" "$http_user_agent" '
+                'req_time=$request_time upstream_time=$upstream_response_time';
+
+access_log /var/log/nginx/access.log main;
+error_log  /var/log/nginx/error.log warn;
+
 server {
     listen 80;
     server_name _;
 
     location / {
         proxy_pass http://bug_bounty_web:5505;
+
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
+
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+
     }
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip_min_length 1024;
 }
 ```
 
@@ -799,7 +1081,7 @@ server {
 from flask import Blueprint, render_template, session, request
 from app.utils.decorator_admin import admin_required
 from app.controllers.admin.read_logs import read_logs_info
-from app.controllers.admin.check_login import check_login_admin
+from app.controllers.admin.login_control_panel import auth_login_admin
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -807,7 +1089,7 @@ admin_bp = Blueprint('admin', __name__)
 def admin_login():
 
     if request.method == 'POST':
-        return check_login_admin()
+        return auth_login_admin()
 
     return render_template('admin/login_admin.html')
 
@@ -833,8 +1115,8 @@ def admin_profile():
 ### `app\routes\api.py`
 ```python
 from flask import Blueprint, request
-from app.controllers.api.get_admin_info_by_post import get_information_admin
-from app.controllers.api.get_user_info_by_post import get_user_info_by_id
+from app.controllers.api.get_admin_info_by_post import get_admin_info_by_post
+from app.controllers.api.get_user_info_by_post import get_user_info_by_post
 from app.controllers.api.get_current_user_info_id import get_current_user_info
 from app.controllers.api.get_current_admin_info_id import get_current_admin_info
 from app.controllers.api.clear_logs_admin import clear_logs_admin
@@ -848,7 +1130,7 @@ api_bp = Blueprint('api', __name__)
 def information_user():
 
     if request.method == 'POST':
-        return get_user_info_by_id()
+        return get_user_info_by_post()
 
     return get_current_user_info()
 
@@ -858,7 +1140,7 @@ def information_user():
 def information_admin():
 
     if request.method == 'POST':
-        return get_information_admin()
+        return get_admin_info_by_post()
 
     return get_current_admin_info()
 
@@ -870,87 +1152,31 @@ def clear_logs():
 
 ### `app\routes\auth.py`
 ```python
-from flask import Blueprint, render_template, request, redirect, url_for, session, make_response
-from werkzeug.security import generate_password_hash, check_password_hash
-from app.database.connect_database import get_db_connection
-from app.services.get_token import get_token_serializer
-from itsdangerous import BadSignature, SignatureExpired
-from app.services.send_email import send_reset_email
+from flask import Blueprint, render_template, request
+from app.controllers.auth.register import auth_register_user
+from app.controllers.auth.login import auth_login_user
+from app.controllers.auth.reset_password import auth_reset_password_user
+from app.controllers.auth.check_token_used import check_token_used
+from app.controllers.auth.get_account_id_from_token import get_account_id_user_from_token
+from app.controllers.auth.reset_password_check_token_post import reset_password_check_token_user_by_post
+from app.controllers.auth.logout import auth_logout_user
 from .. import cache
-from bleach import clean
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
 
-    error = None
     if request.method == 'POST':
+        return auth_login_user()
 
-        username = request.form.get('username', '')
-        raw_password = clean(request.form.get('password', ''))
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT username, is_admin, password FROM users WHERE username = '" + username + "'")
-        row = cursor.fetchone()
-        conn.close()
-
-        if row and check_password_hash(row[2], raw_password):
-            session['username'] = row[0]
-            session['is_admin'] = bool(row[1])
-            return redirect(url_for('user.user_dashboard'))
-
-        else:
-            error = "Invalid Username or Password"
-
-    return render_template('auth/login.html', error=error)
+    return render_template('auth/login.html')
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
 
-    error = None
-
     if request.method == 'POST':
-
-        try:
-            username = request.form.get('username', '').strip()
-            raw_password = clean(request.form.get('password', '')).strip()
-            hased_password = generate_password_hash(raw_password)
-            email = clean(request.form.get('email', '')).strip()
-            first_name = clean(request.form.get('first_name', '')).strip()
-            last_name = clean(request.form.get('last_name', '')).strip()
-            number_phone = clean(request.form.get('number_phone', '')).strip()
-            website_company = clean(request.form.get('website_company', '')).strip()
-            birth_date = clean(request.form.get('birth_date', ''))
-
-            # Open connection to database
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
-            # Check if username already exists
-            cursor.execute("SELECT * FROM users WHERE username = '" + username + "'")
-            existing_user = cursor.fetchone()
-
-            if existing_user:
-                error = "Username already exists. Please a defferent one."
-                return render_template('auth/register.html', error=error)
-
-            # Add new user to database
-            cursor.execute('''
-                INSERT INTO users (username, password, email, first_name, last_name, number_phone, website_company, birth_date)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (username, hased_password, email, first_name, last_name, number_phone, website_company, birth_date))
-
-            conn.commit()
-            conn.close()
-
-            # Register successfully
-            success = 'Register Successfully'
-            return render_template('auth/register.html', success=success)
-
-        except Exception as e:
-            error = str(e)
-            return render_template('auth/register.html', error=error)
+        return auth_register_user()
 
     return render_template('auth/register.html')
 
@@ -959,89 +1185,29 @@ def register():
 def reset_password():
 
     if request.method == 'POST':
-        email = request.form.get('email', '').strip()
-
-        # Check rate limit with cache
-        if cache.get(f'reset_mail_sent_{email}'):
-            Notification = 'Please wait at least 5 minutes before requesting another password reset email.'
-            return render_template('auth/reset_password.html', Notification=Notification)
-
-        conn = get_db_connection()
-        account = conn.execute("SELECT id FROM accounts WHERE email = ?", (email,)).fetchone()
-        conn.close()
-
-        if account:
-            account_id = account['id']
-            serializer = get_token_serializer()
-            token = serializer.dumps({'account_id': account_id})
-            reset_url = url_for('perform_password_reset', token=token, _external=True)
-
-            send_reset_email(email, reset_url)
-
-            # Email is saved in cache and wait 5 minutes before resetting password again
-            cache.set(f'reset_mail_sent_{email}', True, timeout=300)
-
-        Notification = 'If that email is registered, you will receive a password reset link shortly'
-        return render_template('auth/reset_password.html', Notification=Notification)
+        return auth_reset_password_user()
 
     return render_template('auth/reset_password.html')
 
 @auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
 def perform_password_reset(token):
 
-    # Check if token was already used
+    account_id = get_account_id_user_from_token(token)
+    if isinstance(account_id, str):
+        return account_id
+
     if cache.get(f'token_used_{token}'):
-
-        Notification = 'This reset link has already been used.'
-        return render_template('auth/reset_token.html', Notification=Notification, show_form=False)
-
-    serializer = get_token_serializer()
-
-    try:
-        data = serializer.loads(token, max_age=3600)
-        account_id = data.get('account_id')
-
-    except SignatureExpired:
-        Notification = 'The reset link has expired. Please request a new one'
-        return render_template('auth/reset_token.html', Notification=Notification, show_form=False)
-
-    except BadSignature:
-        Notification = 'The reset link is invalid. Please request a new one.'
-        return render_template('auth/reset_token.html', Notification=Notification, show_form=False)
+        return check_token_used()
 
     if request.method == 'POST':
-        new_password = request.form.get('password', '').strip()
-
-        if not new_password:
-            Notification = "Password can't be empty."
-            return render_template('auth/reset_token.html', Notification=Notification)
-
-        hashed_password = generate_password_hash(new_password)
-        conn = get_db_connection()
-
-        conn.execute(
-            'UPDATE accounts SET password = ? WHERE id = ?', (hashed_password, account_id)
-        )
-
-        conn.commit()
-        conn.close()
-
-        # Mark token as used
-        cache.set(f'token_used_{token}', True, timeout=1800)  # Chặn dùng lại trong thời gian token còn hiệu lực
-
-        Notification2 = 'Your Password has been Updated. You may now log in.'
-        return render_template('auth/reset_token.html', Notification2=Notification2, show_form=False)
+        return reset_password_check_token_user_by_post(account_id, token)
 
     return render_template('auth/reset_token.html')
 
 @auth_bp.route('/logout', methods=['GET'])
 def logout():
 
-    session.clear()
-    running_value = request.args.get('running', 'True')
-    response = make_response(render_template('auth/logout.html', running=running_value))
-    response.delete_cookie('session')
-    return response
+    return auth_logout_user()
 ```
 
 ### `app\routes\error_pages.py`
@@ -1100,7 +1266,7 @@ def user_update_balance():
 @user_required
 def user_profile():
 
-    return render_template('user/profile_user.html', template_rendered=session['username'])
+    return render_template('user/profile_user.html', username=session['username'])
 
 @user_bp.route('/dashboard', methods=['GET'])
 @user_required
@@ -1720,14 +1886,18 @@ html, body {
 <html lang="en">
 <head>
     <title>Web Site Ebook</title>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
     <script>
         const style = localStorage.getItem('style') || 'light_mode';
         const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
         document.write(`<link rel="stylesheet" href="${css}">`);
     </script>
+
 </head>
 <body>
     <div class="card">
@@ -1763,7 +1933,9 @@ html, body {
 <body>
     <div class="card">
         {% if username %}
-            <h1>Welcome Back {{ username }}!</h1>
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Welcome Back <span class="username" style="color: #4a90e2;">{{ username }}</span>
+        </h1>
         {% endif %}
 
         <ul class="menu">
@@ -1821,7 +1993,11 @@ html, body {
 </head>
 <body>
     <div class="card">
-        <h1>Control Panel Login</h1>
+
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Control Panel Login
+        </h1>
+
         <form action="/admin/login" method="POST">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required placeholder="Enter your username">
@@ -1831,12 +2007,15 @@ html, body {
 
             <button type="submit">Login</button>
         </form>
-            {% if error %}
+
+        {% if error %}
             <p style="color:royalblue;"> {{ error }}</p>
             {% endif %}
-        <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+
+            <p>Reset Password? <a href="/auth/reset-password">Reset Password Here</a></p>
+
         <footer>
-            &copy; 2025 TheWindGhost
+        &copy; 2025 TheWindGhost
         </footer>
     </div>
 </body>
@@ -1914,7 +2093,7 @@ html, body {
   </style>
 </head>
 <body>
-  <h1 style="color: #00ffa3; text-shadow: 0 0 8px #00ffa3; font-weight: 700; margin-bottom: 20px;">
+  <h1 style="color: #00ffa3; text-shadow: 0 0 8px #00ffa3; font-weight: 700; margin-bottom: 20px; text-align: center;">
     Logs File
   </h1>
 
@@ -1964,7 +2143,9 @@ html, body {
 <body>
     <div class="card" id="card" style="visibility: hidden;">
         {% if username %}
-        <h1>Profile {{ username }}</h1>
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Profile <span class="username" style="color: #4a90e2;">{{ username }}</span>
+        </h1>
         {% endif %}
 
         <div id="result" class="result-box" style="display:none;">Information</div>
@@ -1997,16 +2178,22 @@ html, body {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
     <title>Login</title>
+
     <script>
         const style = localStorage.getItem('style') || 'light_mode';
         const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
         document.write(`<link rel="stylesheet" href="${css}">`);
     </script>
+
 </head>
 <body>
     <div class="card">
-        <h1>Login</h1>
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Login
+        </h1>
+
         <form action="/auth/login" method="POST">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required placeholder="Enter your username">
@@ -2037,12 +2224,15 @@ html, body {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
   <title>Redirecting ...</title>
+
   <script>
     const style = localStorage.getItem('style') || 'light_mode';
     const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
     document.write(`<link rel="stylesheet" href="${css}">`);
   </script>
+
 </head>
 <body>
   <div class="card">
@@ -2083,12 +2273,15 @@ html, body {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
   <script>
     const style = localStorage.getItem('style') || 'light_mode';
     const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
     document.write(`<link rel="stylesheet" href="${css}">`);
   </script>
+
   <title>Registration Form</title>
+
 </head>
 <body>
   <div class="card">
@@ -2157,8 +2350,11 @@ html, body {
 <html lang="en">
 <head>
     <title>Reset Password</title>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Theme CSS Loader -->
     <script>
         const style = localStorage.getItem('style') || 'light_mode';
         const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
@@ -2169,22 +2365,41 @@ html, body {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
+    <!-- Preconnect font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
 </head>
 <body>
     <div class="card">
-        <h1><span class="material-symbols-rounded">mail</span>Reset Password</h1>
-        <form method="POST">
-            <label for="email">Enter your email address:</label>
-            <input type="email" name="email" id="email" required>
-            <button type="submit">Send Reset Link</button>
+
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            <span class="material-symbols-rounded">mail</span>
+            Reset Password
+        </h1>
+
+        <form method="POST" style="display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%;">
+
+            <input type="email" name="email" id="email" required placeholder="Enter your email address">
+
+            <button type="submit">
+                Send Reset Link
+            </button>
+
             {% if Notification %}
             <p>{{ Notification }}</p>
             {% endif %}
+            {% if error %}
+            <p>{{ error }}</p>
+            {% endif %}
         </form>
+
     <!-- Footer -->
     <footer>
         &copy; 2025 TheWindGhost
     </footer>
+
     </div>
 </body>
 </html>
@@ -2199,10 +2414,17 @@ html, body {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Preconnect font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
+    <!-- Theme CSS Loader -->
     <script>
         const style = localStorage.getItem('style') || 'light_mode';
         const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
@@ -2211,22 +2433,42 @@ html, body {
 </head>
 <body>
     <div class="card">
-        <h1><span class="material-symbols-rounded">lock_reset</span>Set New Password</h1>
-        <form method="POST">
-            <label for="password">New Password:</label>
-            <input type="password" name="password" id="password" required>
-            <button type="submit">Reset Password</button>
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            <span class="material-symbols-rounded">lock_reset</span>
+            Set New Password
+        </h1>
+
+        <form method="POST" style="display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 400px; margin: 0 auto;">
+
+            {% if not Notification2 and not Notification %}
+            <input type="password" name="password" id="password" required placeholder="Enter your new password" style="padding: 10px; width: 100%; border-radius: 8px; border: 1px solid #ccc; background-color: #1e1e1e; color: #fff;">
+
+            <button type="submit" style="background-color: #00ADB5; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+                Reset Password
+            </button>
+
+            {% endif %}
+
             {% if Notification %}
-            <p>{{ Notification }}</p>
+                <p style="color: #FF6B6B;">{{ Notification }}</p>
             {% elif Notification2 %}
-            <p>{{ Notification2 }}<a href="/login">Login on Here</a></p>
+                <p style="color: #4CAF50;">{{ Notification2 }} <a href="/login" style="color: #00ADB5;">Login on Here</a></p>
             {% endif %}
         </form>
-    </div>
+
+        <ul style="list-style: none; padding: 0; margin-top: 20px;">
+        <li style="margin-bottom: 12px;">
+            <a href="/auth/login" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+                <span class="material-icons">arrow_back</span> Back
+            </a>
+        </li>
+        </ul>
     <!-- Footer -->
     <footer>
         &copy; 2025 TheWindGhost
     </footer>
+    </div>
+
 </body>
 </html>
 ```
@@ -2239,13 +2481,17 @@ html, body {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
   <title>403 Forbidden</title>
+
   <script>
     const style = localStorage.getItem('style') || 'light_mode';
     const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
     document.write(`<link rel="stylesheet" href="${css}">`);
   </script>
+
   <script src="{{ url_for('static', filename='script-js/redirect_referer.js') }}"></script>
+
 </head>
 <body>
   <div class="card">
@@ -2265,22 +2511,32 @@ html, body {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Dashboard</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+    <!-- Preconnect font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- Material Icons -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <script>
-    const style = localStorage.getItem('style') || 'light_mode';
-    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
-    document.write(`<link rel="stylesheet" href="${css}">`);
-  </script>
-  <script src="{{ url_for('static', filename='script-js/get_balance_user.js') }}" defer></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
+    <!-- Material Icons -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Theme CSS Loader -->
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
+
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='script-js/get_balance_user.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='script-js/get_pending_loan_amount_user.js') }}" defer></script>
 
 </head>
 <body>
@@ -2294,22 +2550,24 @@ html, body {
     </header>
 
     <section class="user-info" style="margin-bottom: 25px;">
+
       <h2 style="font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 10px;">
         <span class="material-icons">waving_hand</span>
-        Welcome Back, <span class="username" style="color: #4a90e2;">{{ username }}</span>!
+        Welcome Back <span class="username" style="color: #4a90e2;">{{ username }}</span>!
       </h2>
+
       <p style="margin-top: 8px;"><strong>Status:</strong> <span class="status-active" style="color: green; font-weight: 600;">Active</span></p>
     </section>
 
     <section class="finance-info">
       <p style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
         <span class="material-icons">account_balance</span>
-        <strong>Account Balance:</strong> $<span id="balance-amount"></span>
+        <strong>Account Balance:</strong> $<span id="balance-amount" style="color: #4a90e2;"></span>
       </p>
-      <!-- demo and waiting for code backend-->
+
       <p style="display: flex; align-items: center; gap: 8px;">
         <span class="material-icons">hourglass_empty</span>
-        <strong>Pending:</strong> $200.00
+        <strong>Pending Loan Amount:</strong> $<span id="pending-loan-amount" style="color: #4a90e2;"></span>
       </p>
     </section>
 
@@ -2355,22 +2613,35 @@ html, body {
     <title>Profile</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Preconnect font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
     <!-- Material Icons -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Theme CSS Loader -->
     <script>
         const style = localStorage.getItem('style') || 'light_mode';
         const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
         document.write(`<link rel="stylesheet" href="${css}">`);
     </script>
+
+    <!--JS-->
     <script src="{{ url_for('static', filename='script-js/get_information_user.js') }}"></script>
 </head>
 <body>
     <div class="card" id="card" style="visibility: hidden;">
-        {% if template_rendered %}
-        <h1>Profile {{ template_rendered }}</h1>
+        {% if username %}
+        <h1 style="font-size: 2rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            Profile <span class="username" style="color: #4a90e2;">{{ username }}</span>
+        </h1>
         {% endif %}
 
         <div id="result" class="result-box" style="display:none;">Information</div>
@@ -2401,24 +2672,31 @@ html, body {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Settings Update</title>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-  <!-- Google Fonts & Material Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <script>
-    (function(){
-      const mode = localStorage.getItem('style') || 'light_mode';
-      const href = mode === 'dark_mode'
-        ? '/static/styles/style2.css'
-        : '/static/styles/style1.css';
-      document.write(`<link rel="stylesheet" id="theme-stylesheet" href="${href}">`);
-    })();
-  </script>
+    <title>Settings Update</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <script src="{{ url_for('static', filename='script-js/update_setting_user.js') }}"></script>
+    <!-- Preconnect font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
+    <!-- Material Icons -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Theme CSS Loader -->
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
+
+    <script src="{{ url_for('static', filename='script-js/update_setting_user.js') }}"></script>
+
 </head>
 <body>
   <div class="card">
@@ -2485,19 +2763,29 @@ html, body {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
-  <title>Wallet</title>
-  <!-- Material Icons -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <script>
-    const style = localStorage.getItem('style') || 'light_mode';
-    const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
-    document.write(`<link rel="stylesheet" href="${css}">`);
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet</title>
+
+    <!-- Preconnect font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+
+    <!-- Material Icons -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Theme CSS Loader -->
+    <script>
+        const style = localStorage.getItem('style') || 'light_mode';
+        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+        document.write(`<link rel="stylesheet" href="${css}">`);
+    </script>
+
 </head>
 <body>
 

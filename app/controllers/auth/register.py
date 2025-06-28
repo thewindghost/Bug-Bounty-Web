@@ -42,5 +42,5 @@ def auth_register_user():
         return render_template('auth/register.html', success=success)
     
     except Exception as e:
-        e = "Internal Server Error", 500
-        return render_template('auth/register.html', error=e)
+        error = "Internal Server Error"
+        return render_template('auth/reset_password.html', error=error)

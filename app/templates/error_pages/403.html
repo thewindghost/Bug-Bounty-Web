@@ -13,8 +13,6 @@
     document.write(`<link rel="stylesheet" href="${css}">`);
   </script>
 
-  <script src="{{ url_for('static', filename='script-js/redirect_referer.js') }}"></script>
-
 </head>
 <body>
   <div class="card">
@@ -24,6 +22,10 @@
     <footer>
       &copy; 2025 TheWindGhost
     </footer>
+
+    <!--JS-->
+    <script src="{{ url_for('static', filename='script-js/redirect_referer.js') }}" defer></script>
+
   </div>
 </body>
 </html>

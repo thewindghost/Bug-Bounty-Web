@@ -29,6 +29,7 @@ def information_admin():
     return get_current_admin_info()
 
 @api_bp.route('/v1/clear_logs', methods=['POST'])
+@admin_required
 def clear_logs():
     
     return clear_logs_admin()

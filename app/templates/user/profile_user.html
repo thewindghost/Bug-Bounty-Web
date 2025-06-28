@@ -24,8 +24,6 @@
         document.write(`<link rel="stylesheet" href="${css}">`);
     </script>
 
-    <!--JS-->
-    <script src="{{ url_for('static', filename='script-js/get_information_user.js') }}"></script>
 </head>
 <body>
     <div class="card" id="card" style="visibility: hidden;">
@@ -52,7 +50,10 @@
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
-    </div>
 
+    <!--JS-->
+    <script src="{{ url_for('static', filename='script-js/get_information_user.js') }}" defer></script>
+
+    </div>
 </body>
 </html>

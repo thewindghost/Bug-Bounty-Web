@@ -29,7 +29,7 @@ def register():
 
 @auth_bp.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
-    
+
     if request.method == 'POST':
         return auth_reset_password_user()
     
@@ -39,6 +39,7 @@ def reset_password():
 def perform_password_reset(token):
 
     account_id = get_account_id_user_from_token(token)
+    
     if isinstance(account_id, str):
         return account_id
 

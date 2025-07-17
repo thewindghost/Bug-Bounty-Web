@@ -68,7 +68,8 @@ python.exe ./create_readme_md.py or python3 ./create_readme_md.py
     │   ├── api/
     │   │   ├── clear_logs_admin.py
     │   │   ├── get_admin_info_by_post.py
-    │   │   ├── get_current_admin_info_id.py
+    │   │   └── get_current_admin_info_id.py
+    │   ├── api_user/
     │   │   ├── get_current_user_info_id.py
     │   │   └── get_user_info_by_post.py
     │   ├── auth/
@@ -479,7 +480,7 @@ def get_current_admin_info():
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 ```
 
-### `app\controllers\api\get_current_user_info_id.py`
+### `app\controllers\api_user\get_current_user_info_id.py`
 ```python
 import sqlite3
 from flask import jsonify, session
@@ -523,7 +524,7 @@ def get_current_user_info():
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 ```
 
-### `app\controllers\api\get_user_info_by_post.py`
+### `app\controllers\api_user\get_user_info_by_post.py`
 ```python
 import sqlite3
 from flask import request, jsonify
@@ -1116,8 +1117,8 @@ def admin_profile():
 ```python
 from flask import Blueprint, request
 from app.controllers.api.get_admin_info_by_post import get_admin_info_by_post
-from app.controllers.api.get_user_info_by_post import get_user_info_by_post
-from app.controllers.api.get_current_user_info_id import get_current_user_info
+from app.controllers.api_user.get_user_info_by_post import get_user_info_by_post
+from app.controllers.api_user.get_current_user_info_id import get_current_user_info
 from app.controllers.api.get_current_admin_info_id import get_current_admin_info
 from app.controllers.api.clear_logs_admin import clear_logs_admin
 from app.utils.decorator_admin import admin_required
@@ -1125,7 +1126,7 @@ from app.utils.decorator_user import user_required
 
 api_bp = Blueprint('api', __name__)
 
-@api_bp.route('/v1/information_users', methods=['GET', 'POST'])
+@api_bp.route('/v1/information_user', methods=['GET', 'POST'])
 @user_required
 def information_user():
 
@@ -1145,6 +1146,7 @@ def information_admin():
     return get_current_admin_info()
 
 @api_bp.route('/v1/clear_logs', methods=['POST'])
+@admin_required
 def clear_logs():
 
     return clear_logs_admin()
@@ -1193,6 +1195,7 @@ def reset_password():
 def perform_password_reset(token):
 
     account_id = get_account_id_user_from_token(token)
+
     if isinstance(account_id, str):
         return account_id
 
@@ -1369,19 +1372,26 @@ def count_log_entries(file_path):
 ### `app\static\robots.txt`
 ```text
 User-agent: *
-Disallow: /admin-panel-131315315211
-Disallow: /admin-panel-131315315211/logs
+Disallow: /admin/control-panel
+Disallow: /admin/logs
+Disallow: /admin/profile
+Disallow: /admin/login
+Disallow: /api/v1/clear_logs
+Disallow: /api/v1/information_admin
+Disallow: /api/v1/information_users
 
 User-agent: *
 allow: /
-allow: /register
-allow: /login
-allow: /dashboard
-allow: /profile
-allow: /parser-info
-allow: /balances
-allow: /reset-password
-allow: /logout
+allow: /auth/register
+allow: /auth/login
+allow: /auth/reset-password
+allow: /auth/reset-password/<token>
+allow: /auth/logout
+allow: /user/dashboard
+allow: /user/profile
+allow: /user/setting
+allow: /user/wallet
+allow: /error_pages/403
 ```
 
 ### `app\static\styles\style1.css`
@@ -2104,7 +2114,7 @@ html, body {
   {% endfor %}
 
   <div class="action-buttons">
-    <a href="javascript:window.location.href = document.referrer" class="action-button">
+    <a href="/admin/control-panel" class="action-button">
       <span class="material-icons">arrow_back</span> Back
     </a>
     <a href="/auth/logout?running=True" class="action-button logout-button">
@@ -2152,7 +2162,7 @@ html, body {
 
         <ul style="list-style: none; padding: 0; margin-top: 20px;">
           <li style="margin-bottom: 12px;">
-              <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+              <a href="/admin/control-panel" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
                   <span class="material-icons">arrow_back</span> Back
               </a>
           </li>
@@ -2452,7 +2462,7 @@ html, body {
             {% if Notification %}
                 <p style="color: #FF6B6B;">{{ Notification }}</p>
             {% elif Notification2 %}
-                <p style="color: #4CAF50;">{{ Notification2 }} <a href="/login" style="color: #00ADB5;">Login on Here</a></p>
+                <p style="color: #4CAF50;">{{ Notification2 }} <a href="/auth/login" style="color: #00ADB5;">Login on Here</a></p>
             {% endif %}
         </form>
 
@@ -2490,8 +2500,6 @@ html, body {
     document.write(`<link rel="stylesheet" href="${css}">`);
   </script>
 
-  <script src="{{ url_for('static', filename='script-js/redirect_referer.js') }}"></script>
-
 </head>
 <body>
   <div class="card">
@@ -2501,6 +2509,10 @@ html, body {
     <footer>
       &copy; 2025 TheWindGhost
     </footer>
+
+    <!--JS-->
+    <script src="{{ url_for('static', filename='script-js/redirect_referer.js') }}" defer></script>
+
   </div>
 </body>
 </html>
@@ -2533,10 +2545,6 @@ html, body {
         const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
         document.write(`<link rel="stylesheet" href="${css}">`);
     </script>
-
-    <!-- JS -->
-    <script src="{{ url_for('static', filename='script-js/get_balance_user.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='script-js/get_pending_loan_amount_user.js') }}" defer></script>
 
 </head>
 <body>
@@ -2600,6 +2608,10 @@ html, body {
       &copy; 2025 TheWindGhost
     </footer>
 
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='script-js/get_balance_user.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='script-js/get_pending_loan_amount_user.js') }}" defer></script>
+
   </div>
 </body>
 </html>
@@ -2633,8 +2645,6 @@ html, body {
         document.write(`<link rel="stylesheet" href="${css}">`);
     </script>
 
-    <!--JS-->
-    <script src="{{ url_for('static', filename='script-js/get_information_user.js') }}"></script>
 </head>
 <body>
     <div class="card" id="card" style="visibility: hidden;">
@@ -2648,7 +2658,7 @@ html, body {
 
         <ul style="list-style: none; padding: 0; margin-top: 20px;">
           <li style="margin-bottom: 12px;">
-              <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+              <a href="/user/dashboard" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
                   <span class="material-icons">arrow_back</span> Back
               </a>
           </li>
@@ -2661,8 +2671,11 @@ html, body {
         <footer>
             &copy; 2025 TheWindGhost
         </footer>
-    </div>
 
+    <!--JS-->
+    <script src="{{ url_for('static', filename='script-js/get_information_user.js') }}" defer></script>
+
+    </div>
 </body>
 </html>
 ```
@@ -2690,12 +2703,10 @@ html, body {
 
     <!-- Theme CSS Loader -->
     <script>
-        const style = localStorage.getItem('style') || 'light_mode';
-        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
-        document.write(`<link rel="stylesheet" href="${css}">`);
+      const style = localStorage.getItem('style') || 'light_mode';
+      const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+      document.write(`<link rel="stylesheet" id="theme-stylesheet" href="${css}">`);
     </script>
-
-    <script src="{{ url_for('static', filename='script-js/update_setting_user.js') }}"></script>
 
 </head>
 <body>
@@ -2721,24 +2732,12 @@ html, body {
       <button type="submit" style="padding: 12px; background-color: #4a90e2; color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
         Save Changes
       </button>
+      <div id="messageBox"></div>
     </form>
-
-    <div id="clientError" class="message error" style="display:none; margin-top: 10px;"></div>
-
-    {% if success %}
-      <div class="message success" style="margin-top: 15px; color: green; font-weight: 600;">
-        {{ success }}
-      </div>
-    {% endif %}
-    {% if error %}
-      <div class="message error" style="margin-top: 15px; color: red; font-weight: 600;">
-        {{ error }}
-      </div>
-    {% endif %}
 
     <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
       <li>
-        <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+        <a href="/user/dashboard" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
           <span class="material-icons">arrow_back</span> Back
         </a>
       </li>
@@ -2752,8 +2751,11 @@ html, body {
     <footer style="margin-top: 30px; text-align: center; font-size: 0.95rem; color: #7a7a7a;">
       &copy; 2025 TheWindGhost
     </footer>
-  </div>
 
+    <!--JS-->
+    <script src="{{ url_for('static', filename='script-js/update_setting_user.js') }}"></script>
+
+  </div>
 </body>
 </html>
 ```
@@ -2813,7 +2815,7 @@ html, body {
 
     <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
       <li>
-        <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+        <a href="/user/dashboard" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
           <span class="material-icons">arrow_back</span> Back
         </a>
       </li>

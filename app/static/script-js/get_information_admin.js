@@ -17,7 +17,7 @@ async function fetchProfileData() {
         const u = json.admin_data;
 
         resultBox.innerHTML = `
-      🔹<strong>Personal Information</strong><br>
+        <strong><span style="color: #4a90e2;">Personal Information</strong></span><br>
         <strong>ID:</strong> <span style="color:#28a745;">${u.id}</span><br>
         <strong>First Name:</strong> <span style="color:#007BFF;">${u.first_name}</span><br>
         <strong>Last Name:</strong> <span style="color:#007BFF;">${u.last_name}</span><br>
@@ -28,17 +28,13 @@ async function fetchProfileData() {
         <strong>Created At:</strong> <span style="color:rgb(255, 166, 0);">${u.created_at}</span><br>
         <br>
 
-      🔹<strong>Account And Permissions</strong><br>
+        <strong><span style="color: #4a90e2;">Account And Permissions</strong></span><br>
         <strong>Username:</strong> <span style="color:#007BFF; font-weight:bold;">${u.username}</span><br>
         <strong>Admin:</strong> <span style="color:${u.is_admin ? '#28a745' : '#dc3545'};">${u.is_admin}</span><br>
         <strong>Account Balance:</strong> <span style="color:rgb(255, 166, 0);">$${u.balance}</span><br>
         <br>
 
-      🔹<strong>Password (hashed)</strong><br>
-        <details>
-          <summary style="cursor: pointer; color: #28a745;">Show hashed password</summary>
-          <p style="word-break: break-all; color:rgb(255, 166, 0);"><strong>Password:</strong> ${u.password}</p>
-        </details>
+        <strong><span style="color: #4a90e2;">Password (hashed)</strong></span> <span style="color:rgb(255, 166, 0);">$${u.password}</span>
         `;
       } else {
         resultBox.innerHTML = `<span class="error">${json.error}</span>`;

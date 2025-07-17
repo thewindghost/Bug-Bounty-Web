@@ -2,7 +2,7 @@ async function fetchPendingLoanAmountOnly() {
     const pending_loan_amountSpan = document.getElementById('pending-loan-amount');
 
     try {
-      const res = await fetch('/api/v1/information_users', {
+      const res = await fetch('/api/v1/information_user', {
         method: 'GET',
         credentials: 'include'
       });

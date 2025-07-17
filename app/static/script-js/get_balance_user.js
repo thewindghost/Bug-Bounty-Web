@@ -2,7 +2,7 @@ async function fetchBalanceOnly() {
     const balanceSpan = document.getElementById('balance-amount');
 
     try {
-      const res = await fetch('/api/v1/information_users', {
+      const res = await fetch('/api/v1/information_user', {
         method: 'GET',
         credentials: 'include'
       });

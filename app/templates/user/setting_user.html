@@ -19,9 +19,9 @@
 
     <!-- Theme CSS Loader -->
     <script>
-        const style = localStorage.getItem('style') || 'light_mode';
-        const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
-        document.write(`<link rel="stylesheet" href="${css}">`);
+      const style = localStorage.getItem('style') || 'light_mode';
+      const css = style === 'dark_mode' ? '/static/styles/style2.css' : '/static/styles/style1.css';
+      document.write(`<link rel="stylesheet" id="theme-stylesheet" href="${css}">`);
     </script>
     
 </head>
@@ -48,24 +48,12 @@
       <button type="submit" style="padding: 12px; background-color: #4a90e2; color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
         Save Changes
       </button>
+      <div id="messageBox"></div>
     </form>
-
-    <div id="clientError" class="message error" style="display:none; margin-top: 10px;"></div>
-
-    {% if success %}
-      <div class="message success" style="margin-top: 15px; color: green; font-weight: 600;">
-        {{ success }}
-      </div>
-    {% endif %}
-    {% if error %}
-      <div class="message error" style="margin-top: 15px; color: red; font-weight: 600;">
-        {{ error }}
-      </div>
-    {% endif %}
 
     <ul style="list-style: none; padding: 0; margin-top: 25px; display: flex; flex-direction: column; gap: 12px;">
       <li>
-        <a href="javascript:window.location.href = document.referrer" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
+        <a href="/user/dashboard" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #4a90e2; font-weight: 600;">
           <span class="material-icons">arrow_back</span> Back
         </a>
       </li>
